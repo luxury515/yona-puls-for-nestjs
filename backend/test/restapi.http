@@ -1,0 +1,42 @@
+### 회원가입 테스트
+POST http://localhost:6000/users/signup
+Content-Type: application/json
+
+{
+  "name": "Test User",
+  "loginId": "testuser",
+  "email": "testuser@example.com",
+  "password": "password123"
+}
+
+### 로그인 테스트
+# @name login
+POST http://localhost:6000/users/login
+Content-Type: application/json
+
+{
+  "loginId": "testuser",
+  "password": "password123"
+}
+
+### 응답에서 access_token 추출
+@accessToken = {{login.response.body.access_token}}
+@refreshToken = {{login.response.body.refresh_token}}
+
+### 프로필 조회 테스트 (보호된 리소스)
+GET http://localhost:6000/users/profile
+Authorization: Bearer {{accessToken}}
+
+### 토큰 갱신 테스트
+# @name refresh
+POST http://localhost:6000/users/refresh
+Content-Type: application/json
+
+{
+  "refresh_token": "{{refreshToken}}"
+}
+
+### 새로운 access_token으로 프로필 조회
+@newAccessToken = {{refresh.response.body.access_token}}
+GET http://localhost:6000/users/profile
+Authorization: Bearer {{newAccessToken}}
