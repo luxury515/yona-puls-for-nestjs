@@ -1,0 +1,66 @@
+.side-menu {
+  width: 250px;
+  background-color: #f0f0f0;
+  padding: 20px;
+  transition: width 0.3s ease;
+  position: relative;
+}
+
+.side-menu.collapsed {
+  width: 60px;
+  padding: 20px 0;
+}
+
+.side-menu ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.side-menu li {
+  margin-bottom: 15px;
+}
+
+.side-menu a {
+  display: flex;
+  align-items: center;
+  color: #333;
+  text-decoration: none;
+}
+
+.side-menu a svg {
+  font-size: 1.2em;
+  min-width: 20px;
+}
+
+.side-menu:not(.collapsed) a svg {
+  margin-right: 10px;
+}
+
+.side-menu.collapsed a {
+  justify-content: center;
+}
+
+.side-menu.collapsed a span {
+  display: none;
+}
+
+.toggle-btn {
+  position: absolute;
+  top: 50%;
+  right: -15px;
+  transform: translateY(-50%);
+  background-color: #f0f0f0;
+  border: 1px solid #ddd;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+}
+
+.toggle-btn svg {
+  font-size: 0.8em;
+}
