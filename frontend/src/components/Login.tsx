@@ -1,5 +1,5 @@
 import React, { useState, ChangeEvent, FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../utils/api';
 import { toast } from 'react-toastify';
@@ -26,7 +26,6 @@ const Login: React.FC = () => {
     e.preventDefault();
     try {
       const response = await api.post('/users/login', formData);
-      console.log('Login response:', response.data);
       if (response.data && response.data.user) {
         login(response.data.user);
         toast.success('로그인에 성공했습니다!');
@@ -42,29 +41,46 @@ const Login: React.FC = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-md mx-auto mt-8">
-      <input
-        type="text"
-        name="loginId"
-        value={formData.loginId}
-        onChange={handleChange}
-        placeholder="로그인 ID"
-        className="w-full px-3 py-2 mb-3 border rounded"
-        required
-      />
-      <input
-        type="password"
-        name="password"
-        value={formData.password}
-        onChange={handleChange}
-        placeholder="비밀번호"
-        className="w-full px-3 py-2 mb-3 border rounded"
-        required
-      />
-      <button type="submit" className="w-full px-3 py-2 text-white bg-blue-500 rounded hover:bg-blue-600">
-        로그인
-      </button>
-    </form>
+    <div className="max-w-md mx-auto mt-8">
+      <form onSubmit={handleSubmit} className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+        <div className="mb-4">
+          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="loginId">
+            로그인 ID
+          </label>
+          <input
+            type="text"
+            name="loginId"
+            id="loginId"
+            value={formData.loginId}
+            onChange={handleChange}
+            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            required
+          />
+        </div>
+        <div className="mb-6">
+          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="password">
+            비밀번호
+          </label>
+          <input
+            type="password"
+            name="password"
+            id="password"
+            value={formData.password}
+            onChange={handleChange}
+            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline"
+            required
+          />
+        </div>
+        <div className="flex items-center justify-between">
+          <button type="submit" className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+            로그인
+          </button>
+          <Link to="/reset-password-request" className="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800">
+            비밀번호 재설정
+          </Link>
+        </div>
+      </form>
+    </div>
   );
 };
 

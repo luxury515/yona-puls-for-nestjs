@@ -1,4 +1,4 @@
-import { Controller, Post, Body, UnauthorizedException, Get, UseGuards, Req, HttpException, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Body, UnauthorizedException, Get, UseGuards, Req, HttpException, HttpStatus, Param } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { AuthGuard } from '@nestjs/passport';
 
@@ -23,7 +23,7 @@ export class UsersController {
   async login(@Body() loginData: { loginId: string; password: string }) {
     const user = await this.usersService.validateUser(loginData.loginId, loginData.password);
     if (!user) {
-      throw new UnauthorizedException('로그인 정보가 올바르지 않습니다.');
+      throw new UnauthorizedException('로그인 보가 올바르지 않습니다.');
     }
     const result = await this.usersService.login(user);
     return {
@@ -44,7 +44,7 @@ export class UsersController {
       const result = await this.usersService.refreshAccessToken(body.refresh_token);
       return { ...result, message: '토큰이 성공적으로 갱신되었습니다.' };
     } catch (error) {
-      throw new UnauthorizedException('토큰 갱신에 실패했습니다.');
+      throw new UnauthorizedException('토큰 ���신에 실패했습니다.');
     }
   }
 
@@ -56,6 +56,43 @@ export class UsersController {
       return { message: '로그아웃 되었습니다.' };
     } catch (error) {
       throw new HttpException('로그아웃에 실패했습니다.', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Post('reset-password/:userId')
+  async adminResetPassword(@Param('userId') userId: string) {
+    try {
+      await this.usersService.adminResetPassword(userId);
+      return { message: '비밀번호가 성공적으로 초기화되었습니다.' };
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new HttpException('비밀번호 초기화에 실패했습니다.', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  @Post('request-password-reset')
+  async requestPasswordReset(@Body('email') email: string) {
+    try {
+      await this.usersService.sendPasswordResetEmail(email);
+      return { message: '비밀번호 재설정 이메일이 전송되었습니다.' };
+    } catch (error) {
+      throw new HttpException('비밀번호 재설정 요청에 실패했습니다.', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  @Post('reset-password')
+  async resetPassword(@Body() resetData: { token: string; newPassword: string }) {
+    try {
+      await this.usersService.resetPasswordWithToken(resetData.token, resetData.newPassword);
+      return { message: '비밀번호가 성공적으로 재설정되었습니다.' };
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new HttpException('비밀번호 재설정에 실패했습니다.', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 }

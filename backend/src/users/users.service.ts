@@ -1,7 +1,8 @@
-import { Injectable, Inject, ConflictException, InternalServerErrorException, UnauthorizedException } from '@nestjs/common';
+import { Injectable, Inject, ConflictException, InternalServerErrorException, UnauthorizedException, NotFoundException } from '@nestjs/common';
 import { Pool, RowDataPacket } from 'mysql2/promise';
 import * as crypto from 'crypto';
 import { JwtService } from '@nestjs/jwt';
+import * as nodemailer from 'nodemailer';
 
 interface User extends RowDataPacket {
   id: number;
@@ -15,15 +16,44 @@ interface User extends RowDataPacket {
 
 @Injectable()
 export class UsersService {
+  private transporter: nodemailer.Transporter;
+
   constructor(
     @Inject('DATABASE_CONNECTION')
     private connection: Pool,
-    private jwtService: JwtService
-  ) {}
+    private jwtService: JwtService,
+  ) {
+    console.log('UsersService constructor called');
+    console.log('SMTP Configuration:', {
+      host: process.env.SMTP_HOST,
+      port: parseInt(process.env.SMTP_PORT),
+      secure: process.env.SMTP_SECURE === 'true',
+      auth: {
+        user: process.env.SMTP_USER,
+      }
+    });
+
+    this.transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: parseInt(process.env.SMTP_PORT),
+      secure: process.env.SMTP_SECURE === 'true',
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+    });
+
+    this.transporter.verify((error, success) => {
+      if (error) {
+        console.error('SMTP Transporter Error:', error);
+      } else {
+        console.log('SMTP Transporter is ready to send emails');
+      }
+    });
+  }
 
   async createUser(name: string, loginId: string, email: string, password: string) {
     try {
-      // 먼저 사용자 ID와 이메일의 중복 여부를 확인
       const checkQuery = `
         SELECT login_id, email FROM n4user
         WHERE login_id = ? OR email = ?
@@ -113,7 +143,6 @@ export class UsersService {
         const newPayload = { username: user.login_id, sub: user.id };
         const newAccessToken = this.jwtService.sign(newPayload, { expiresIn: '15m' });
         
-        // 새로운 refresh token 생성 및 저장
         const newRefreshToken = this.jwtService.sign(newPayload, { expiresIn: '7d' });
         await this.saveRefreshToken(user.id, newRefreshToken);
 
@@ -154,5 +183,156 @@ export class UsersService {
         resolve(derivedKey.toString('hex'));
       });
     });
+  }
+
+  async resetPassword(userId: string): Promise<void> {
+    const findUserQuery = `
+      SELECT login_id, password_salt
+      FROM n4user
+      WHERE id = ?
+    `;
+    const [users] = await this.connection.execute<User[]>(findUserQuery, [userId]);
+
+    if (users.length === 0) {
+      throw new NotFoundException('사용자를 찾을 수 없습니다.');
+    }
+
+    const user = users[0];
+    const newPassword = user.login_id;
+    const hashedPassword = await this.hashPassword(newPassword, user.password_salt);
+
+    const updatePasswordQuery = `
+      UPDATE n4user
+      SET password = ?
+      WHERE id = ?
+    `;
+    await this.connection.execute(updatePasswordQuery, [hashedPassword, userId]);
+  }
+
+  async adminResetPassword(userId: string): Promise<void> {
+    const findUserQuery = `
+      SELECT login_id, password_salt
+      FROM n4user
+      WHERE id = ?
+    `;
+    const [users] = await this.connection.execute<User[]>(findUserQuery, [userId]);
+
+    if (users.length === 0) {
+      throw new NotFoundException('사용자를 찾을 수 없습니다.');
+    }
+
+    const user = users[0];
+    const newPassword = user.login_id;
+    const hashedPassword = await this.hashPassword(newPassword, user.password_salt);
+
+    const updatePasswordQuery = `
+      UPDATE n4user
+      SET password = ?
+      WHERE id = ?
+    `;
+    await this.connection.execute(updatePasswordQuery, [hashedPassword, userId]);
+  }
+
+  async sendPasswordResetEmail(email: string): Promise<void> {
+    console.log('sendPasswordResetEmail called with email:', email);
+    try {
+      console.log('Attempting to send password reset email to:', email);
+
+      const findUserQuery = `
+        SELECT id, login_id
+        FROM n4user
+        WHERE email = ?
+      `;
+      console.log('Executing query:', findUserQuery, 'with params:', [email]);
+      const [users] = await this.connection.execute<User[]>(findUserQuery, [email]);
+
+      console.log('Query result:', users);
+
+      if (users.length === 0) {
+        console.log('User not found for email:', email);
+        throw new NotFoundException('해당 이메일로 등록된 사용자를 찾을 수 없습니다.');
+      }
+
+      const user = users[0];
+      console.log('User found:', user);
+
+      const resetToken = this.generateResetToken(user.id);
+      console.log('Reset token generated:', resetToken);
+
+      const saveTokenQuery = `
+        UPDATE n4user
+        SET reset_token = ?, reset_token_expires = CONVERT_TZ(DATE_ADD(NOW(), INTERVAL 1 HOUR), '+00:00', ?)
+        WHERE id = ?
+      `;
+      console.log('Executing query:', saveTokenQuery, 'with params:', [resetToken, process.env.TIME_ZONE, user.id]);
+      await this.connection.execute(saveTokenQuery, [resetToken, process.env.TIME_ZONE, user.id]);
+      console.log('Reset token saved to database');
+
+      const resetLink = `http://localhost:3000/reset-password?token=${resetToken}`;
+      const mailOptions = {
+        from: `"Your App" <${process.env.SMTP_USER}>`,
+        to: email,
+        subject: '비밀번호 재설정',
+        text: `비밀번호를 재설정하려면 다음 링크를 클릭하세요: ${resetLink}`,
+        html: `<p>비밀번호를 재설정하려면 다음 링크를 클릭하세요:</p><p><a href="${resetLink}">${resetLink}</a></p>`,
+      };
+
+      console.log('Attempting to send email with options:', JSON.stringify(mailOptions, null, 2));
+
+      const info = await this.transporter.sendMail(mailOptions);
+      console.log('Email sent successfully. Message ID:', info.messageId);
+      console.log('Preview URL:', nodemailer.getTestMessageUrl(info));
+      console.log(`Password reset email sent to ${email}`);
+    } catch (error) {
+      console.error('Detailed error in sendPasswordResetEmail:', error);
+      if (error.response) {
+        console.error('SMTP Response:', error.response);
+      }
+      console.error('Error stack:', error.stack);
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new InternalServerErrorException('비밀번호 재설정 이메일 전송에 실패했습니다: ' + error.message);
+    }
+  }
+
+  async resetPasswordWithToken(token: string, newPassword: string): Promise<void> {
+    const findUserQuery = `
+      SELECT id, password_salt, reset_token, 
+             CONVERT_TZ(reset_token_expires, ?, '+00:00') as reset_token_expires
+      FROM n4user
+      WHERE reset_token = ?
+    `;
+    const [users] = await this.connection.execute<User[]>(findUserQuery, [process.env.TIME_ZONE, token]);
+
+    if (users.length === 0) {
+      throw new UnauthorizedException('유효하지 않거나 만료된 토큰입니다.');
+    }
+
+    const user = users[0];
+
+    const now = new Date();
+    const tokenExpires = new Date(user.reset_token_expires);
+    console.log('Current time:', now);
+    console.log('Token expires:', tokenExpires);
+
+    if (now > tokenExpires) {
+      throw new UnauthorizedException('만료된 토큰입니다.');
+    }
+
+    const hashedPassword = await this.hashPassword(newPassword, user.password_salt);
+
+    const updatePasswordQuery = `
+      UPDATE n4user
+      SET password = ?, reset_token = NULL, reset_token_expires = NULL
+      WHERE id = ?
+    `;
+    await this.connection.execute(updatePasswordQuery, [hashedPassword, user.id]);
+  }
+
+  private generateResetToken(userId: number): string {
+    const token = crypto.randomBytes(32).toString('hex');
+    console.log('Generated reset token:', token, 'for user ID:', userId);
+    return token;
   }
 }
