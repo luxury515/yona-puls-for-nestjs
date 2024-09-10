@@ -33,10 +33,25 @@ const ProjectForm: React.FC = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value,
-    }));
+    if (type === 'checkbox') {
+      const isChecked = (e.target as HTMLInputElement).checked;
+      setFormData(prev => {
+        const newState = { ...prev, [name]: isChecked };
+        
+        if (name === 'code' && !isChecked) {
+          newState.pullRequest = false;
+          newState.review = false;
+        } else if (name === 'pullRequest' && isChecked) {
+          newState.code = true;
+        } else if (name === 'review' && isChecked) {
+          newState.code = true;
+        }
+        
+        return newState;
+      });
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -134,6 +149,10 @@ const ProjectForm: React.FC = () => {
               checked={formData[menu]}
               onChange={handleChange}
               className="mr-2"
+              disabled={
+                (menu === 'pullRequest' && !formData.code) ||
+                (menu === 'review' && !formData.code)
+              }
             />
             {menu === 'pullRequest' ? '코드 주고 받기' : menu}
           </label>
