@@ -10,12 +10,12 @@ export default function Header() {
 
   const handleLogout = async () => {
     try {
-      await logout(); // AuthContext의 logout 함수 호출
+      await logout();
       toast.success('로그아웃 되었습니다.');
       navigate('/login');
     } catch (error) {
       console.error('로그아웃 실패:', error);
-      toast.error('로그아웃에 실패했습니다.');
+      // 에러 메시지는 api 인터셉터에서 처리되므로 여기서는 추가로 표시하지 않습니다.
     }
   };
 

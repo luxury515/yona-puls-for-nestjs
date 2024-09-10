@@ -40,7 +40,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       localStorage.removeItem('user'); // 로컬 스토리지에서 사용자 정보 제거
     } catch (error) {
       console.error('Logout failed:', error);
-      throw error; // 에러를 상위로 전파하여 호출하는 쪽에서 처리할 수 있게 함
+      throw error;
     }
   };
 

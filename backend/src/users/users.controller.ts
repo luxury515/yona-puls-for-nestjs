@@ -51,7 +51,11 @@ export class UsersController {
   @UseGuards(AuthGuard('jwt'))
   @Post('logout')
   async logout(@Req() req) {
-    await this.usersService.logout(req.user.userId);
-    return { message: '로그아웃 되었습니다.' };
+    try {
+      await this.usersService.logout(req.user.userId);
+      return { message: '로그아웃 되었습니다.' };
+    } catch (error) {
+      throw new HttpException('로그아웃에 실패했습니다.', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
   }
 }

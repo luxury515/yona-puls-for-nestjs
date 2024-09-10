@@ -13,7 +13,12 @@ api.interceptors.response.use(
     return response;
   },
   (error) => {
-    if (error.response && error.response.data) {
+    if (error.response && error.response.status === 401) {
+      // 401 Unauthorized 에러 처리
+      localStorage.removeItem('user'); // 로컬 스토리지에서 사용자 정보 제거
+      // 로그인 페이지로 리다이렉트
+      window.location.href = '/login';
+    } else if (error.response && error.response.data) {
       if (error.response.data.message) {
         toast.error(error.response.data.message);
       } else {
