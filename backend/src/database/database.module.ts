@@ -2,21 +2,22 @@ import { Module } from '@nestjs/common';
 import { createPool } from 'mysql2/promise';
 
 @Module({
+  imports: [],
   providers: [
     {
       provide: 'DATABASE_CONNECTION',
-      useFactory: () => {
-        const connection = createPool({
-          host: 'localhost',
-          user: 'root',
-          password: 'root',
-          database: 'yona_db',
-          connectionLimit: 10,
+      useFactory: async () => {
+        return createPool({
+          host: process.env.DB_HOST,
+          user: process.env.DB_USER,
+          password: process.env.DB_PASSWORD,
+          database: process.env.DB_NAME,
+          connectionLimit: parseInt(process.env.DB_CONNECTION_LIMIT, 10),
         });
-        return connection;
       },
+      inject: [],
     },
   ],
-  exports: ['DATABASE_CONNECTION'], // 다른 모듈에서 사용할 수 있도록 내보냅니다.
+  exports: ['DATABASE_CONNECTION'],
 })
 export class DatabaseModule {}
