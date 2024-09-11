@@ -1,9 +1,12 @@
-import { Controller, Post, Body, UnauthorizedException, Get, UseGuards, Req, HttpException, HttpStatus, Param } from '@nestjs/common';
+import { Controller, Post, Body, UnauthorizedException, Get, UseGuards, Req, HttpException, HttpStatus, Param, Query, Logger } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { AuthGuard } from '@nestjs/passport';
+import { User } from './user.entity';
+import { AdminGuard } from '../guards/admin.guard';
 
 @Controller('users')
 export class UsersController {
+  private readonly logger = new Logger(UsersController.name);
   constructor(private usersService: UsersService) {}
 
   @Post('signup')
@@ -44,7 +47,7 @@ export class UsersController {
       const result = await this.usersService.refreshAccessToken(body.refresh_token);
       return { ...result, message: '토큰이 성공적으로 갱신되었습니다.' };
     } catch (error) {
-      throw new UnauthorizedException('토큰 ���신에 실패했습니다.');
+      throw new UnauthorizedException('토큰 신에 실패했습니다.');
     }
   }
 
@@ -55,7 +58,7 @@ export class UsersController {
       await this.usersService.logout(req.user.userId);
       return { message: '로그아웃 되었습니다.' };
     } catch (error) {
-      throw new HttpException('로그아웃에 실패했습니다.', HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new HttpException('로그아웃�� 실패했습니다.', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -94,5 +97,14 @@ export class UsersController {
       }
       throw new HttpException('비밀번호 재설정에 실패했습니다.', HttpStatus.INTERNAL_SERVER_ERROR);
     }
+  }
+
+  @Get('user-list')
+  // @UseGuards(AuthGuard('jwt'), AdminGuard)
+  async getUsers(@Query('state') state?: string): Promise<User[]> {
+    this.logger.log(`사용자 목록 요청 받음. 상태: ${state || '모든 상태'}`);
+    const users = await this.usersService.getUsers(state);
+    this.logger.log(`${users.length}명의 사용자를 찾았습니다.`);
+    return users;
   }
 }

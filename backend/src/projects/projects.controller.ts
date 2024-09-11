@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get, Param } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Query } from '@nestjs/common';
 import { ProjectsService } from './projects.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 
@@ -17,7 +17,12 @@ export class ProjectsController {
   }
 
   @Get(':id/issues')
-  async getProjectIssues(@Param('id') id: string) {
-    return this.projectsService.getProjectIssues(parseInt(id));
+  async getProjectIssues(
+    @Param('id') id: string,
+    @Query('page') page: number = 1,
+    @Query('pageSize') pageSize: number = 10,
+    @Query('state') state: 'open' | 'closed' = 'open'  // 'open' 또는 'closed'만 허용
+  ) {
+    return this.projectsService.getProjectIssues(+id, +page, +pageSize, state);
   }
 }

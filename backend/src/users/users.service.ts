@@ -4,16 +4,7 @@ import * as crypto from 'crypto';
 import { JwtService } from '@nestjs/jwt';
 import * as nodemailer from 'nodemailer';
 import { format, toZonedTime, toDate } from 'date-fns-tz';
-
-interface User extends RowDataPacket {
-  id: number;
-  login_id: string;
-  name: string;
-  email: string;
-  password: string;
-  password_salt: string;
-  refresh_token?: string;
-}
+import { User } from './user.entity';
 
 @Injectable()
 export class UsersService {
@@ -369,5 +360,21 @@ export class UsersService {
     const token = crypto.randomBytes(32).toString('hex');
     console.log('Generated reset token:', token, 'for user ID:', userId);
     return token;
+  }
+
+  async getUsers(state?: string): Promise<User[]> {
+    let query = 'SELECT id, name, login_id, email, state FROM n4user';
+    const params = [];
+
+    if (state) {
+      if (state === 'GUEST') {
+        query += ' WHERE is_guest = 1';
+      } else {
+        query += ' WHERE state = ?';
+      }
+      params.push(state);
+    }
+    const [users] = await this.connection.execute<RowDataPacket[]>(query, params);
+    return users as User[];
   }
 }
