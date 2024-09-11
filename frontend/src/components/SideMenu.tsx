@@ -27,8 +27,8 @@ const SideMenu: React.FC = () => {
   return (
     <div 
       className={`bg-gray-100 transition-all duration-300 ease-in-out ${
-        isCollapsed ? 'w-16' : 'w-64'
-      } relative overflow-hidden`}
+        isCollapsed ? 'w-16' : 'w-48'
+      } relative`}
     >
       <nav className="p-2">
         <ul className="space-y-1">
@@ -39,7 +39,7 @@ const SideMenu: React.FC = () => {
       </nav>
       <button
         onClick={toggleMenu}
-        className="absolute -right-5 top-1/2 transform -translate-y-1/2 bg-white border border-gray-300 rounded-full w-10 h-10 flex items-center justify-center text-gray-600 hover:text-gray-800 transition-colors duration-200 shadow-md"
+        className="absolute right-0 top-1/2 transform translate-x-1/2 -translate-y-1/2 bg-white border border-gray-300 rounded-full w-10 h-10 flex items-center justify-center text-gray-600 hover:text-gray-800 transition-colors duration-200 shadow-md z-10"
       >
         {isCollapsed ? <FaChevronRight className="w-4 h-4" /> : <FaChevronLeft className="w-4 h-4" />}
       </button>
