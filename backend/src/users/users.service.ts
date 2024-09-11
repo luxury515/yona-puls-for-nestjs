@@ -3,6 +3,7 @@ import { Pool, RowDataPacket } from 'mysql2/promise';
 import * as crypto from 'crypto';
 import { JwtService } from '@nestjs/jwt';
 import * as nodemailer from 'nodemailer';
+import { format, toZonedTime, toDate } from 'date-fns-tz';
 
 interface User extends RowDataPacket {
   id: number;
@@ -297,37 +298,71 @@ export class UsersService {
   }
 
   async resetPasswordWithToken(token: string, newPassword: string): Promise<void> {
-    const findUserQuery = `
-      SELECT id, password_salt, reset_token, 
-             CONVERT_TZ(reset_token_expires, ?, '+00:00') as reset_token_expires
-      FROM n4user
-      WHERE reset_token = ?
-    `;
-    const [users] = await this.connection.execute<User[]>(findUserQuery, [process.env.TIME_ZONE, token]);
+    try {
+      console.log('resetPasswordWithToken 시작: token =', token);
 
-    if (users.length === 0) {
-      throw new UnauthorizedException('유효하지 않거나 만료된 토큰입니다.');
+      const findUserQuery = `
+        SELECT id, password_salt, reset_token, 
+               reset_token_expires
+        FROM n4user
+        WHERE reset_token = ?
+      `;
+      console.log('findUserQuery 실행:', findUserQuery);
+      const [users] = await this.connection.execute<User[]>(findUserQuery, [token]);
+      console.log('findUserQuery 결과:', users);
+
+      if (users.length === 0) {
+        console.log('유효하지 않은 토큰:', token);
+        throw new UnauthorizedException('유효하지 않거나 만료된 토큰입니다.');
+      }
+
+      const user = users[0];
+      console.log('사용자 찾음:', user.id);
+
+      const seoulTimeZone = 'Asia/Seoul';
+      const now = new Date();
+      let tokenExpires: Date;
+
+      try {
+        // 데이터베이스의 시간을 Date 객체로 변환
+        tokenExpires = toDate(user.reset_token_expires, { timeZone: seoulTimeZone });
+        console.log('토큰 만료 시간 (원본):', user.reset_token_expires);
+        console.log('토큰 만료 시간 (UTC):', tokenExpires.toISOString());
+        console.log('토큰 만료 시간 (서울):', format(toZonedTime(tokenExpires, seoulTimeZone), 'yyyy-MM-dd HH:mm:ss', { timeZone: seoulTimeZone }));
+      } catch (error) {
+        console.error('토큰 만료 시간 파싱 오류:', error);
+        throw new UnauthorizedException('유효하지 않은 토큨 만료 시간입니다.');
+      }
+
+      console.log('현재 시간 (UTC):', now.toISOString());
+      console.log('현재 시간 (서울):', format(toZonedTime(now, seoulTimeZone), 'yyyy-MM-dd HH:mm:ss', { timeZone: seoulTimeZone }));
+
+      if (isNaN(tokenExpires.getTime()) || now > tokenExpires) {
+        console.log('토큰 만료됨 또는 유효하지 않은 만료 시간');
+        throw new UnauthorizedException('만료된 토큰입니다.');
+      }
+
+      console.log('새 비밀번호 해싱 시작');
+      const hashedPassword = await this.hashPassword(newPassword, user.password_salt);
+      console.log('새 비밀번호 해싱 완료');
+
+      const updatePasswordQuery = `
+        UPDATE n4user
+        SET password = ?, reset_token = NULL, reset_token_expires = NULL
+        WHERE id = ?
+      `;
+      console.log('updatePasswordQuery 실행:', updatePasswordQuery);
+      await this.connection.execute(updatePasswordQuery, [hashedPassword, user.id]);
+      console.log('비밀번호 업데이트 완료');
+
+      console.log('resetPasswordWithToken 완료');
+    } catch (error) {
+      console.error('비밀번호 재설정 중 오류 발생:', error);
+      if (error instanceof UnauthorizedException) {
+        throw error;
+      }
+      throw new InternalServerErrorException('비밀번호 재설정에 실패했습니다: ' + error.message);
     }
-
-    const user = users[0];
-
-    const now = new Date();
-    const tokenExpires = new Date(user.reset_token_expires);
-    console.log('Current time:', now);
-    console.log('Token expires:', tokenExpires);
-
-    if (now > tokenExpires) {
-      throw new UnauthorizedException('만료된 토큰입니다.');
-    }
-
-    const hashedPassword = await this.hashPassword(newPassword, user.password_salt);
-
-    const updatePasswordQuery = `
-      UPDATE n4user
-      SET password = ?, reset_token = NULL, reset_token_expires = NULL
-      WHERE id = ?
-    `;
-    await this.connection.execute(updatePasswordQuery, [hashedPassword, user.id]);
   }
 
   private generateResetToken(userId: number): string {
