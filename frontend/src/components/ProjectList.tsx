@@ -44,7 +44,12 @@ export default function ProjectList() {
             onClick={() => handleProjectClick(project.id)}
           >
             <div className="p-4 flex items-center space-x-4">
-              <Avatar name={project.name} />
+              <div 
+                className="w-12 h-12 rounded-full bg-gray-300 flex items-center justify-center text-white font-semibold text-lg"
+                style={{ backgroundColor: `hsl(${project.id * 100 % 360}, 70%, 50%)` }}
+              >
+                {project.name.charAt(0).toUpperCase()}
+              </div>
               <div className="flex-grow">
                 <h3 className="font-semibold">{project.name}</h3>
                 <p className="text-sm text-gray-500">{project.participant_count} 멤버</p>

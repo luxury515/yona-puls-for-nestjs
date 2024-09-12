@@ -6,23 +6,19 @@ interface AvatarProps {
   size?: 'sm' | 'md' | 'lg';
 }
 
-const Avatar: React.FC<AvatarProps> = ({ imageUrl, name, size = 'md' }) => {
-  const sizeClasses = {
-    sm: 'w-6 h-6 text-xs',
-    md: 'w-8 h-8 text-sm',
-    lg: 'w-10 h-10 text-base'
-  };
+function Avatar({ name, imageUrl, size, ...props }: Readonly<AvatarProps>) {
+  const initials = name ? name.charAt(0).toUpperCase() : '?';
 
   return (
-    <div className={`${sizeClasses[size]} rounded-full flex items-center justify-center text-white bg-gray-300 overflow-hidden`}>
+    <div {...props}>
       {imageUrl ? (
-        <img src={imageUrl} alt={name} className="w-full h-full object-cover" />
+        <img src={imageUrl} alt={name} className={`avatar-${size}`} />
       ) : (
-        name.charAt(0).toUpperCase()
+        initials
       )}
     </div>
   );
-};
+}
 
 interface AvatarGroupProps {
   users: Array<{
