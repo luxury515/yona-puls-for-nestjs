@@ -1,5 +1,6 @@
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
 import api from '../utils/api';
+import axios from 'axios'; // Assuming axios is used for HTTP requests
 
 interface User {
   id: number;
@@ -35,12 +36,30 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const logout = async () => {
     try {
-      await api.post('/users/logout');
-      setUser(null);
-      localStorage.removeItem('user'); // 로컬 스토리지에서 사용자 정보 제거
+      let token = localStorage.getItem('accessToken');
+      if (!token) {
+        token = await refreshToken();
+      }
+      await axios.post('http://localhost:8080/users/logout', {}, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      // 로그아웃 성공 처리
     } catch (error) {
-      console.error('Logout failed:', error);
-      throw error;
+      console.error('로그아웃 실패:', error);
+    }
+  };
+
+  const refreshToken = async () => {
+    try {
+      const refreshToken = localStorage.getItem('refreshToken');
+      const response = await axios.post('http://localhost:8080/users/refresh', { refresh_token: refreshToken });
+      localStorage.setItem('accessToken', response.data.access_token);
+      return response.data.access_token;
+    } catch (error) {
+      console.error('토큰 갱신 실패:', error);
+      // 로그인 페이지로 리다이렉트
     }
   };
 

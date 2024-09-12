@@ -1,8 +1,9 @@
-import { Controller, Post, Body, UnauthorizedException, Get, UseGuards, Req, HttpException, HttpStatus, Param, Query, Logger } from '@nestjs/common';
+import { Controller, Post, Body, UnauthorizedException, Get, UseGuards, Req, HttpException, HttpStatus, Param, Query, Logger, Request } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { AuthGuard } from '@nestjs/passport';
 import { User } from './users.entity';
 import { AdminGuard } from '../guards/admin.guard';
+import { Request as ExpressRequest } from 'express';
 
 @Controller('users')
 export class UsersController {
@@ -53,12 +54,22 @@ export class UsersController {
 
   @UseGuards(AuthGuard('jwt'))
   @Post('logout')
-  async logout(@Req() req) {
+  async logout(@Req() req: ExpressRequest) {
     try {
-      await this.usersService.logout(req.user.userId);
+      const user = req.user as { userId: string };
+      if (!user || !user.userId) {
+        this.logger.error('로그아웃 실패: 사용자 정보 없음');
+        throw new UnauthorizedException('사용자 인증에 실패했습니다.');
+      }
+      this.logger.log(`로그아웃 시도: 사용자 ID ${user.userId}`);
+      await this.usersService.logout(parseInt(user.userId, 10));
       return { message: '로그아웃 되었습니다.' };
     } catch (error) {
-      throw new HttpException('로그아웃�� 실패했습니다.', HttpStatus.INTERNAL_SERVER_ERROR);
+      this.logger.error(`로그아웃 실패: ${error.message}`, error.stack);
+      if (error instanceof UnauthorizedException) {
+        throw error;
+      }
+      throw new HttpException('로그아웃에 실패했습니다.', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
