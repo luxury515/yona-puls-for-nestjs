@@ -27,13 +27,13 @@ Yona Issue Tracker는 NestJS 백엔드와 React 프론트엔드를 사용하여 
 ### 사전 요구사항
 - Node.js
 - MySQL
-
+- node 18.16.0
 ### 설치
 
 1. 저장소 클론:
    ```
-   git clone https://github.com/your-username/yona-issue-tracker.git
-   cd yona-issue-tracker
+   git clone https://github.com/luxury515/yona-puls-for-nestjs.git
+   cd yona-puls-for-nestjs
    ```
 
 2. 백엔드 설정:
