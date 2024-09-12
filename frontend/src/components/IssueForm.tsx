@@ -3,8 +3,7 @@ import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
 import Header from './Header';
 import SideMenu from './SideMenu';
-
-axios.defaults.baseURL = 'http://localhost:8080';
+import api from '../utils/api';
 
 export default function IssueForm() {
   const { projectId, issueId } = useParams();
@@ -22,8 +21,8 @@ export default function IssueForm() {
   const fetchIssue = async () => {
     setIsLoading(true)
     try {
-      const response = await fetch(`http://localhost:3000/issues/${issueId}?projectId=${projectId}`);
-      const issue = await response.json();
+      const response = await api.get(`/issues/${issueId}?projectId=${projectId}`);
+      const issue = response.data;
       setTitle(issue.title)
       setContent(issue.content)
     } catch (error) {

@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
 import Header from './Header';
 import SideMenu from './SideMenu';
 import HaveAnyData from './HaveAnyData';
 import Pagination from './Pagination';
 import IssueListTab from './IssueListTab';
+import api from '../utils/api';
 
 interface Issue {
   id: number;
@@ -30,7 +30,7 @@ export default function IssueList() {
   useEffect(() => {
     const fetchIssues = async () => {
       try {
-        const response = await axios.get(`/projects/${projectId}/issues`, {
+        const response = await api.get(`/projects/${projectId}/issues`, {
           params: { 
             page: currentPage, 
             pageSize, 
