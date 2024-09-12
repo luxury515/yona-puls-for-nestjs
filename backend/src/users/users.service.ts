@@ -4,7 +4,7 @@ import * as crypto from 'crypto';
 import { JwtService } from '@nestjs/jwt';
 import * as nodemailer from 'nodemailer';
 import { format, toZonedTime, toDate } from 'date-fns-tz';
-import { User } from './user.entity';
+import { User } from './users.entity';
 
 @Injectable()
 export class UsersService {

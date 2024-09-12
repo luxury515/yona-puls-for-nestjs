@@ -1,7 +1,7 @@
 import { Controller, Post, Body, UnauthorizedException, Get, UseGuards, Req, HttpException, HttpStatus, Param, Query, Logger } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { AuthGuard } from '@nestjs/passport';
-import { User } from './user.entity';
+import { User } from './users.entity';
 import { AdminGuard } from '../guards/admin.guard';
 
 @Controller('users')
