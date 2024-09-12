@@ -1,49 +1,44 @@
 import React from 'react';
 
 interface AvatarProps {
-  imageUrl?: string;
-  name: string;
-  size?: 'sm' | 'md' | 'lg';
+  name: string | null | undefined;
+  size?: number;
 }
 
-function Avatar({ name, imageUrl, size, ...props }: Readonly<AvatarProps>) {
-  const initials = name ? name.charAt(0).toUpperCase() : '?';
+export function Avatar({ name, size = 24 }: Readonly<AvatarProps>) {
+  const initial = name && name.length > 0 ? name.charAt(0).toUpperCase() : '?';
 
   return (
-    <div {...props}>
-      {imageUrl ? (
-        <img src={imageUrl} alt={name} className={`avatar-${size}`} />
-      ) : (
-        initials
-      )}
+    <div 
+      className="rounded-full bg-gray-300 flex items-center justify-center text-white font-semibold"
+      style={{ width: `${size}px`, height: `${size}px`, fontSize: `${size / 2}px` }}
+    >
+      {initial}
     </div>
   );
 }
 
 interface AvatarGroupProps {
-  users: Array<{
-    name: string;
-    imageUrl?: string;
-  }>;
+  users: { name: string | null | undefined }[];
   max?: number;
 }
 
-export const AvatarGroup: React.FC<AvatarGroupProps> = ({ users, max = 5 }) => {
-  const visibleUsers = users.slice(0, max);
-  const remainingCount = users.length - max;
+export function AvatarGroup({ users, max = 3 }: Readonly<AvatarGroupProps>) {
+  const visibleUsers = users.filter(user => user?.name).slice(0, max);
+  const remainingCount = Math.max(users.length - max, 0);
 
   return (
-    <div className="flex -space-x-2 justify-end">
+    <div className="flex justify-end -space-x-2 overflow-hidden">
       {visibleUsers.map((user, index) => (
-        <Avatar key={index} name={user.name} imageUrl={user.imageUrl} size="sm" />
+        <Avatar key={index} name={user.name} size={24} />
       ))}
       {remainingCount > 0 && (
-        <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs text-white bg-gray-400">
+        <div className="flex items-center justify-center w-6 h-6 rounded-full bg-gray-300 text-xs text-white">
           +{remainingCount}
         </div>
       )}
     </div>
   );
-};
+}
 
 export default Avatar;
