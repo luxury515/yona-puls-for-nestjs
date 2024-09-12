@@ -13,6 +13,8 @@ interface Issue {
   status: string;
   author_name: string;
   created_date: string;
+  number: number;
+  // number 필드 제거 (필요 없는 경우)
 }
 
 export default function IssueList() {
@@ -52,13 +54,17 @@ export default function IssueList() {
     setCurrentPage(newPage);
   };
 
-  const handlePageSizeChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setPageSize(Number(event.target.value));
-    setCurrentPage(1);
-  };
+  // const handlePageSizeChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+  //   setPageSize(Number(event.target.value));
+  //   setCurrentPage(1);
+  // };
 
   const handleCreateIssue = () => {
     navigate(`/projects/${projectId}/create-issue`);
+  };
+
+  const handleIssueClick = (issueNumber: number) => {
+    navigate(`/projects/${projectId}/issues/${issueNumber}`);
   };
 
   if (!projectId) {
@@ -83,17 +89,21 @@ export default function IssueList() {
           ) : (
             <>
               <div className="mb-4 mt-4 flex justify-between items-center">
-                <select value={pageSize} onChange={handlePageSizeChange} className="border p-2">
+                {/* <select value={pageSize} onChange={handlePageSizeChange} className="border p-2">
                   <option value="10">10개씩 보기</option>
                   <option value="20">20개씩 보기</option>
                   <option value="30">30개씩 보기</option>
                   <option value="100">100개씩 보기</option>
-                </select>
+                </select> */}
                 <p>총 {totalCount}개의 이슈</p>
               </div>
               <ul className="space-y-3">
                 {issues.map((issue) => (
-                  <li key={issue.id} className="flex justify-between gap-x-6 py-5">
+                  <button 
+                    key={issue.id} 
+                    className="w-full text-left flex justify-between gap-x-6 py-5 cursor-pointer hover:bg-gray-100"
+                    onClick={() => handleIssueClick(issue.number)}
+                  >
                     <div className="flex min-w-0 gap-x-4">
                       <div className="min-w-0 flex-auto">
                         <p className="text-sm font-semibold leading-6 text-gray-900">{issue.title}</p>
@@ -106,7 +116,7 @@ export default function IssueList() {
                         생성일: <time dateTime={issue.created_date}>{new Date(issue.created_date).toLocaleDateString()}</time>
                       </p>
                     </div>
-                  </li>
+                  </button>
                 ))}
               </ul>
               <Pagination

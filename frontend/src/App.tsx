@@ -10,6 +10,7 @@ import IssueList from './components/IssueList';
 import UserList from './components/UserList';  // UserList 컴포넌트 import
 import { AuthProvider } from './context/AuthContext';
 import ResetPassword from './pages/ResetPassword';
+import IssueForm from './components/IssueForm';
 
 function App() {
   return (
@@ -23,6 +24,7 @@ function App() {
           <Route path="/projectform" element={<ProjectForm />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/projects/:projectId/issues" element={<IssueList />} />
+          <Route path="/projects/:projectId/issues/:issueId" element={<IssueForm />} />
           <Route path="/users" element={<UserList />} />
           <Route path="/users/user-list" element={<UserList />} />
         </Routes>
