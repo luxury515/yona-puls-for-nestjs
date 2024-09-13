@@ -19,10 +19,15 @@ export class ProjectsController {
   @Get(':id/issues')
   async getProjectIssues(
     @Param('id') id: string,
-    @Query('page') page: number = 1,
-    @Query('pageSize') pageSize: number = 10,
-    @Query('state') state: 'open' | 'closed' = 'open'  // 'open' 또는 'closed'만 허용
+    @Query('page') page?: number,  // 값이 없어도 전체 조회 가능
+    @Query('pageSize') pageSize?: number,  // 값이 없어도 전체 조회 가능
+    @Query('state') state?: 'open' | 'closed'  // 값이 없어도 전체 조회 가능
   ) {
-    return this.projectsService.getProjectIssues(+id, +page, +pageSize, state);
+    return this.projectsService.getProjectIssues(
+      +id, 
+      page ?? 1,  // 기본값 1
+      pageSize ?? 10,  // 기본값 10
+      state ?? 'open'  // 기본값 'open'
+    );
   }
 }

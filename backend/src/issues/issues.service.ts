@@ -23,7 +23,7 @@ export class IssuesService {
   async findOne(issueId: number, projectId: number): Promise<RowDataPacket> {
     this.logger.log(`[IssuesService] Searching for issue ${issueId} in project ${projectId}`);
     const [rows] = await this.connection.execute<RowDataPacket[]>(
-      'SELECT * FROM issue WHERE id = ? AND project_id = ?',
+      'SELECT * FROM issue WHERE number = ? AND project_id = ?',
       [issueId, projectId]
     );
     if (rows.length === 0) {
