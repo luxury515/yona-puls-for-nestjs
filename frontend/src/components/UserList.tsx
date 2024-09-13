@@ -26,18 +26,17 @@ const UserList: React.FC = () => {
     } catch (error) {
       console.error('사용자 목록을 불러오는데 실패했습니다:', error);
       if (axios.isAxiosError(error)) {  
-        const axiosError = error as AxiosError;  
-        if (axiosError.response) {
+        if (error.response) {
           // 서버 응답이 있는 경우
-          console.error('Error data:', axiosError.response.data);
-          console.error('Error status:', axiosError.response.status);
-          console.error('Error headers:', axiosError.response.headers);
-        } else if (axiosError.request) {
+          console.error('Error data:', error.response.data);
+          console.error('Error status:', error.response.status);
+          console.error('Error headers:', error.response.headers);
+        } else if (error.request) {
           // 요청이 이루어졌으나 응답이 없는 경우
-          console.error('Error request:', axiosError.request);
+          console.error('Error request:', error.request);
         } else {
           // 요청 설정 중 오류가 발생한 경우
-          console.error('Error message:', axiosError.message);
+          console.error('Error message:', error.message);
         }
       } else {
         // Axios 에러가 아닌 경우
@@ -49,12 +48,12 @@ const UserList: React.FC = () => {
   const tabs = ['ACTIVE', 'LOCKED', 'DELETED', 'GUEST', 'SITE_ADMIN'];
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <Header />
+    <div className="flex flex-col min-h-screen bg-white dark:bg-gray-900">
+      {/* <Header /> */}
       <div className="flex flex-1">
-        <SideMenu />
+        {/* <SideMenu /> */}
         <div className="flex-1 p-8">
-          <h1 className="text-2xl font-bold mb-4">사용자 목록</h1>
+          <h1 className="text-2xl font-bold mb-4 text-gray-800 dark:text-white">사용자 목록</h1>
           <div className="mb-4">
             {tabs.map((tab) => (
               <button
@@ -63,25 +62,25 @@ const UserList: React.FC = () => {
                 className={`mr-2 px-3 py-1 rounded ${
                   activeTab === tab
                     ? 'bg-blue-500 text-white'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
                 }`}
               >
                 {tab}
               </button>
             ))}
           </div>
-          <table className="min-w-full bg-white">
+          <table className="min-w-full bg-white dark:bg-gray-800">
             <thead>
-              <tr className="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
+              <tr className="bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 uppercase text-sm leading-normal">
                 <th className="py-3 px-6 text-left">이름</th>
                 <th className="py-3 px-6 text-left">로그인 ID</th>
                 <th className="py-3 px-6 text-left">이메일</th>
                 <th className="py-3 px-6 text-left">상태</th>
               </tr>
             </thead>
-            <tbody className="text-gray-600 text-sm font-light">
+            <tbody className="text-gray-600 dark:text-gray-300 text-sm font-light">
               {users.map((user) => (
-                <tr key={user.id} className="border-b border-gray-200 hover:bg-gray-100">
+                <tr key={user.id} className="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600">
                   <td className="py-3 px-6 text-left whitespace-nowrap">{user.name}</td>
                   <td className="py-3 px-6 text-left">{user.login_id}</td>
                   <td className="py-3 px-6 text-left">{user.email}</td>

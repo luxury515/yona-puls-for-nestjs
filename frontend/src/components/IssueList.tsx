@@ -14,7 +14,6 @@ interface Issue {
   author_name: string;
   created_date: string;
   number: number;
-  // number 필드 제거 (필요 없는 경우)
 }
 
 export default function IssueList() {
@@ -34,7 +33,7 @@ export default function IssueList() {
           params: { 
             page: currentPage, 
             pageSize, 
-            state: activeTab // 'open' 또는 'closed'
+            state: activeTab
           }
         });
         setIssues(response.data.issues);
@@ -54,11 +53,6 @@ export default function IssueList() {
     setCurrentPage(newPage);
   };
 
-  // const handlePageSizeChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-  //   setPageSize(Number(event.target.value));
-  //   setCurrentPage(1);
-  // };
-
   const handleCreateIssue = () => {
     navigate(`/projects/${projectId}/create-issue`);
   };
@@ -68,16 +62,16 @@ export default function IssueList() {
   };
 
   if (!projectId) {
-    return <div>프로젝트 ID가 유효하지 않습니다.</div>;
+    return <div className="text-gray-800 dark:text-white">프로젝트 ID가 유효하지 않습니다.</div>;
   }
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <Header />
+    <div className="flex flex-col min-h-screen bg-white dark:bg-gray-900">
+      {/* <Header /> */}
       <div className="flex flex-1">
-        <SideMenu />
+        {/* <SideMenu /> */}
         <div className="flex-1 p-8">
-          <h2 className="text-xl font-semibold mb-4">이슈 목록 (프로젝트 ID: {projectId})</h2>
+          <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-white">이슈 목록 (프로젝트 ID: {projectId})</h2>
           <IssueListTab activeTab={activeTab} setActiveTab={setActiveTab} />
           {totalCount === 0 ? (
             <HaveAnyData 
@@ -89,30 +83,24 @@ export default function IssueList() {
           ) : (
             <>
               <div className="mb-4 mt-4 flex justify-between items-center">
-                {/* <select value={pageSize} onChange={handlePageSizeChange} className="border p-2">
-                  <option value="10">10개씩 보기</option>
-                  <option value="20">20개씩 보기</option>
-                  <option value="30">30개씩 보기</option>
-                  <option value="100">100개씩 보기</option>
-                </select> */}
-                <p>총 {totalCount}개의 이슈</p>
+                <p className="text-gray-600 dark:text-gray-300">총 {totalCount}개의 이슈</p>
               </div>
               <ul className="space-y-3">
                 {issues.map((issue) => (
                   <button 
                     key={issue.id} 
-                    className="w-full text-left flex justify-between gap-x-6 py-5 cursor-pointer hover:bg-gray-100"
+                    className="w-full text-left flex justify-between gap-x-6 py-5 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 bg-white dark:bg-gray-800 rounded-lg shadow"
                     onClick={() => handleIssueClick(issue.number)}
                   >
                     <div className="flex min-w-0 gap-x-4">
                       <div className="min-w-0 flex-auto">
-                        <p className="text-sm font-semibold leading-6 text-gray-900">{issue.title}</p>
-                        <p className="mt-1 truncate text-xs leading-5 text-gray-500">작성자: {issue.author_name}</p>
+                        <p className="text-sm font-semibold leading-6 text-gray-900 dark:text-white">{issue.title}</p>
+                        <p className="mt-1 truncate text-xs leading-5 text-gray-500 dark:text-gray-400">작성자: {issue.author_name}</p>
                       </div>
                     </div>
                     <div className="hidden shrink-0 sm:flex sm:flex-col sm:items-end">
-                      <p className="text-sm leading-6 text-gray-900">{issue.status}</p>
-                      <p className="mt-1 text-xs leading-5 text-gray-500">
+                      <p className="text-sm leading-6 text-gray-900 dark:text-white">{issue.status}</p>
+                      <p className="mt-1 text-xs leading-5 text-gray-500 dark:text-gray-400">
                         생성일: <time dateTime={issue.created_date}>{new Date(issue.created_date).toLocaleDateString()}</time>
                       </p>
                     </div>

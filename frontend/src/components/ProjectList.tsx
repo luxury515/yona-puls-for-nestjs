@@ -34,37 +34,32 @@ export default function ProjectList() {
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto p-4">
-      <h2 className="text-xl font-semibold mb-4">프로젝트 목록</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+    <div className="w-full max-w-6xl mx-auto p-6">
+      <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-gray-100">프로젝트 목록</h2>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {projects.map((project) => (
           <div 
             key={project.id} 
-            className="bg-white shadow rounded-lg overflow-hidden cursor-pointer"
+            className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 cursor-pointer"
             onClick={() => handleProjectClick(project.id)}
           >
-            <div className="p-4 flex items-center space-x-4">
-              <div 
-                className="w-12 h-12 rounded-full bg-gray-300 flex items-center justify-center text-white font-semibold text-lg"
-                style={{ backgroundColor: `hsl(${project.id * 100 % 360}, 70%, 50%)` }}
-              >
-                {project.name.charAt(0).toUpperCase()}
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div 
+                  className="w-12 h-12 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-xl"
+                >
+                  {project.name.charAt(0).toUpperCase()}
+                </div>
+                <button className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors">
+                  <FaEllipsisV className="h-5 w-5" />
+                </button>
               </div>
-              <div className="flex-grow">
-                <h3 className="font-semibold">{project.name}</h3>
-                <p className="text-sm text-gray-500">{project.participant_count} 멤버</p>
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">{project.name}</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">{project.overview || '프로젝트 설명이 없습니다.'}</p>
+              <div className="flex justify-between items-center">
+                <AvatarGroup users={project.participants.map(p => ({ name: p.name }))} />
+                <span className="text-sm text-gray-500 dark:text-gray-400">{project.participant_count} 멤버</span>
               </div>
-              <button className="text-gray-400 hover:text-gray-600">
-                <FaEllipsisV className="h-5 w-5" />
-              </button>
-            </div>
-            <div className="px-4 py-2 bg-gray-50 min-h-[40px] flex items-center">
-              <p className="text-sm text-gray-600 overflow-hidden whitespace-nowrap text-ellipsis w-full">
-                {project.overview || '\u00A0'}
-              </p>
-            </div>
-            <div className="px-4 py-2">
-              <AvatarGroup users={project.participants.map(p => ({ name: p.name }))} />
             </div>
           </div>
         ))}

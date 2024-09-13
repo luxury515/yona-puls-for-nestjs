@@ -1,94 +1,69 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { toast } from 'react-toastify';
-import { FaPlus } from 'react-icons/fa';
+import { useTheme } from '../context/ThemeContext';
+import { FaSun, FaMoon, FaUser, FaCog, FaSignOutAlt } from 'react-icons/fa';
 
 export default function Header() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const [showFlyout, setShowFlyout] = useState(false);
-  const flyoutRef = useRef<HTMLDivElement>(null);
+  const { theme, toggleTheme } = useTheme();
 
-  const handleLogout = async () => {
-    try {
-      await logout();
-      toast.success('로그아웃 되었습니다.');
-      navigate('/login');
-    } catch (error) {
-      console.error('로그아웃 실패:', error);
-    }
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
   };
-
-  const toggleFlyout = () => {
-    setShowFlyout(!showFlyout);
-  };
-
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (flyoutRef.current && !flyoutRef.current.contains(event.target as Node)) {
-        setShowFlyout(false);
-      }
-    }
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
 
   return (
-    <header className="bg-gray-800 text-white">
-      <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-        <Link to="/" className="text-xl font-bold">Your Logo</Link>
-        <nav className="flex items-center">
-          {user && (
-            <div className="relative mr-4" ref={flyoutRef}>
-              <button
-                onClick={toggleFlyout}
-                className="bg-blue-500 hover:bg-blue-600 px-3 py-1 rounded flex items-center"
-              >
-                <FaPlus className="mr-2" />
-                생성
-              </button>
-              {showFlyout && (
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10">
-                  <Link
-                    to="/projectform"
-                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    onClick={() => setShowFlyout(false)}
-                  >
-                    프로젝트 생성
-                  </Link>
-                  <Link
-                    to="/issueform"
-                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    onClick={() => setShowFlyout(false)}
-                  >
-                    이슈 생성
-                  </Link>
+    <header className="bg-white dark:bg-gray-800 shadow-md">
+      <nav className="container mx-auto px-6 py-3">
+        <div className="flex justify-between items-center">
+          <Link to="/" className="text-xl font-semibold text-gray-800 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+            프로젝트 관리 시스템
+          </Link>
+          <div className="flex items-center space-x-4">
+            {user ? (
+              <>
+                <span className="text-gray-700 dark:text-gray-300">안녕하세요, {user.name}님</span>
+                <Link to="/projectform" className="btn-primary">
+                  프로젝트 생성
+                </Link>
+                <div className="relative group">
+                  <button className="btn-icon">
+                    <FaUser />
+                  </button>
+                  <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 z-10 hidden group-hover:block">
+                    <Link to="/profile" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                      <FaUser className="inline-block mr-2" /> 프로필
+                    </Link>
+                    <Link to="/settings" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                      <FaCog className="inline-block mr-2" /> 설정
+                    </Link>
+                    <button onClick={handleLogout} className="w-full text-left block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                      <FaSignOutAlt className="inline-block mr-2" /> 로그아웃
+                    </button>
+                  </div>
                 </div>
-              )}
-            </div>
-          )}
-          {user ? (
-            <div className="flex items-center space-x-4">
-              <span>Welcome, {user.name}</span>
-              <button
-                onClick={handleLogout}
-                className="bg-red-500 hover:bg-red-600 px-3 py-1 rounded"
-              >
-                Logout
-              </button>
-            </div>
-          ) : (
-            <div className="space-x-4">
-              <Link to="/login" className="hover:text-gray-300">Login</Link>
-              <Link to="/signup" className="hover:text-gray-300">Sign Up</Link>
-            </div>
-          )}
-        </nav>
-      </div>
+              </>
+            ) : (
+              <>
+                <Link to="/login" className="btn-primary">
+                  로그인
+                </Link>
+                <Link to="/signup" className="btn-secondary">
+                  회원가입
+                </Link>
+              </>
+            )}
+            <button
+              onClick={toggleTheme}
+              className="btn-icon"
+            >
+              {theme === 'light' ? <FaMoon /> : <FaSun />}
+            </button>
+          </div>
+        </div>
+      </nav>
     </header>
   );
 }
