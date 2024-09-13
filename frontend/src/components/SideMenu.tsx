@@ -34,7 +34,7 @@ const SideMenu: React.FC = () => {
     { to: "/", icon: <FaHome />, label: "홈" },
     { to: "/projects", icon: <FaProjectDiagram />, label: "프로젝트" },
     { to: "/profile", icon: <FaUser />, label: "프로필" },
-    { to: "/settings", icon: <FaCog />, label: "설정" },
+    { to: "/system-settings", icon: <FaCog />, label: "설정" },
     { to: "/users/user-list", icon: <FaUsers />, label: "사용자 관리" },
   ];
 

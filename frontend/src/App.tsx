@@ -15,7 +15,10 @@ import IssueForm from './components/IssueForm';
 import { ThemeProvider } from './context/ThemeContext';
 import Header from './components/Header';
 import SideMenu from './components/SideMenu';
-import Profile from './components/Profile'; // Profile 컴포넌트 import
+import Profile from './components/Profile'; 
+import LabelList from './components/LabelList';
+import LabelForm from './components/LabelForm';
+import SystemSettings from './components/SystemSettings';
 
 const PageLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <div className="flex flex-col min-h-screen bg-gray-100 dark:bg-gray-900">
@@ -37,17 +40,20 @@ function App() {
           <ToastContainer />
           <Routes>
             <Route path="/" element={<Home />} />
-            <Route path="/projects" element={<PageLayout><ProjectList /></PageLayout>} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<SignUp />} />
-            <Route path="/projectform" element={<PageLayout><ProjectForm /></PageLayout>} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/projects/:projectId/issues" element={<PageLayout><IssueList /></PageLayout>} />
-            <Route path="/projects/:projectId/issues/:issueId" element={<PageLayout><IssueForm /></PageLayout>} />
+            <Route path="/profile" element={<PageLayout><Profile /></PageLayout>} />
             <Route path="/users" element={<PageLayout><UserList /></PageLayout>} />
             <Route path="/users/user-list" element={<PageLayout><UserList /></PageLayout>} />
-            <Route path="/profile" element={<PageLayout><Profile /></PageLayout>} /> {/* Profile 라우트 추가 */}
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/projectform" element={<PageLayout><ProjectForm /></PageLayout>} />
+            <Route path="/projects" element={<PageLayout><ProjectList /></PageLayout>} />
+            <Route path="/projects/:projectId/issues" element={<PageLayout><IssueList /></PageLayout>} />
+            <Route path="/projects/:projectId/issues/:issueId" element={<PageLayout><IssueForm /></PageLayout>} />
             <Route path="*" element={<Navigate to="/projects" replace />} />
+            <Route path="/label-list" element={<PageLayout><LabelList /></PageLayout>} />
+            <Route path="/label-form" element={<PageLayout><LabelForm /></PageLayout>} />
+            <Route path="/system-settings" element={<PageLayout><SystemSettings /></PageLayout>} />
           </Routes>
         </Router>
       </AuthProvider>
