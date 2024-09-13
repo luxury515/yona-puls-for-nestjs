@@ -67,9 +67,7 @@ export default function IssueList() {
 
   return (
     <div className="flex flex-col min-h-screen bg-white dark:bg-gray-900">
-      {/* <Header /> */}
       <div className="flex flex-1">
-        {/* <SideMenu /> */}
         <div className="flex-1 p-8">
           <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-white">이슈 목록 (프로젝트 ID: {projectId})</h2>
           <IssueListTab activeTab={activeTab} setActiveTab={setActiveTab} />
@@ -95,13 +93,12 @@ export default function IssueList() {
                     <div className="flex min-w-0 gap-x-4">
                       <div className="min-w-0 flex-auto">
                         <p className="text-sm font-semibold leading-6 text-gray-900 dark:text-white">{issue.title}</p>
-                        <p className="mt-1 truncate text-xs leading-5 text-gray-500 dark:text-gray-400">작성자: {issue.author_name}</p>
                       </div>
                     </div>
                     <div className="hidden shrink-0 sm:flex sm:flex-col sm:items-end">
                       <p className="text-sm leading-6 text-gray-900 dark:text-white">{issue.status}</p>
                       <p className="mt-1 text-xs leading-5 text-gray-500 dark:text-gray-400">
-                        생성일: <time dateTime={issue.created_date}>{new Date(issue.created_date).toLocaleDateString()}</time>
+                      작성자: {issue.author_name} | 생성일: <time dateTime={issue.created_date}>{new Date(issue.created_date).toLocaleDateString()}</time>
                       </p>
                     </div>
                   </button>

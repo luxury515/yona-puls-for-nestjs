@@ -1,11 +1,7 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import axios from 'axios';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import Header from './Header';
-import SideMenu from './SideMenu';
 import api from '../utils/api';
-import Select from 'react-select'; // react-select import
-
+import Select from 'react-select';
 // 프로젝트 옵션 타입 정의
 interface ProjectOption {
   value: string;
@@ -92,9 +88,9 @@ export default function IssueForm() {
     try {
       const contentString = content;
       if (issueId) {
-        await axios.put(`/issues/${issueId}/${projectId}`, { title, body: contentString });
+        await api.put(`/issues/${issueId}/${projectId}`, { title, body: contentString });
       } else {
-        await axios.post(`/issues/${projectId}`, { title, body: contentString });
+        await api.post(`/issues/${projectId}`, { title, body: contentString });
       }
       navigate(`/projects/${projectId}/issues`);
     } catch (error) {

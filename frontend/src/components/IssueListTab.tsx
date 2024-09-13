@@ -36,7 +36,6 @@ export default function IssueListTab({ activeTab, setActiveTab }: IssueListTabPr
   return (
     <div className="border-b border-gray-200 relative">
       <nav className="flex" aria-label="Tabs">
-        <span className="mr-4 py-2 text-sm font-medium text-gray-500">Issues</span>
         <button
           data-tab="open"
           onClick={() => setActiveTab('open')}

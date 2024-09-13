@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
 import { FaEllipsisV } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import Avatar, { AvatarGroup } from './Avatar';
-
+import api from '../utils/api';
 interface Project {
   id: number;
   name: string;
@@ -19,11 +18,11 @@ export default function ProjectList() {
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const response = await axios.get('/projects');
-        setProjects(response.data || []); // 데이터가 없을 경우 빈 배열 사용
+        const response = await api.get('/projects');
+        setProjects(response.data || []); 
       } catch (error) {
         console.error('프로젝트 목록을 불러오는 데 실패했습니다:', error);
-        setProjects([]); // 오류 발생 시 빈 배열로 설정
+        setProjects([]);
       }
     };
 
@@ -35,8 +34,7 @@ export default function ProjectList() {
   };
 
   return (
-    <div className="w-full max-w-6xl mx-auto p-6">
-      <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-gray-100">프로젝트 목록</h2>
+    <div className="w-full max-w-full mx-auto p-6">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {projects.map((project) => (
           <div 

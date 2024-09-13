@@ -3,7 +3,7 @@ import SystemSettingsTab from './SystemSettingsTab';
 import LabelList from './LabelList';
 
 const SystemSettings: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('tab1');
+  const [activeTab, setActiveTab] = useState('label');
 
   const handleTabClick = (tab: string) => {
     setActiveTab(tab);
@@ -13,38 +13,37 @@ const SystemSettings: React.FC = () => {
     <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-md">
       <h1 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">System Settings</h1>
       <div className="w-full">
-        <div className="flex w-full justify-start bg-gray-200 dark:bg-gray-600 rounded-t-lg p-2">
+        <div className="flex w-full justify-start bg-white dark:bg-gray-800 rounded-t-lg">
           <button
-            className={`px-8 py-4 rounded-t-lg transition-all duration-300 ease-in-out ${activeTab === 'label' ? 'bg-white dark:bg-gray-500' : 'hover:bg-gray-300 dark:hover:bg-gray-500'}`}
+            className={`px-8 py-4 rounded-t-lg transition-all duration-300 ease-in-out ${activeTab === 'label' ? 'border-b-2 border-gray-800 dark:border-white text-gray-800 dark:text-white' : 'text-gray-600 dark:text-gray-400'}`}
             onClick={() => handleTabClick('label')}
           >
             Label
           </button>
           <button
-            className={`px-8 py-4 rounded-t-lg transition-all duration-300 ease-in-out ${activeTab === 'tab1' ? 'bg-white dark:bg-gray-500' : 'hover:bg-gray-300 dark:hover:bg-gray-500'}`}
+            className={`px-8 py-4 rounded-t-lg transition-all duration-300 ease-in-out ${activeTab === 'tab1' ? 'border-b-2 border-gray-800 dark:border-white text-gray-800 dark:text-white' : 'text-gray-600 dark:text-gray-400'}`}
             onClick={() => handleTabClick('tab1')}
           >
             One
           </button>
           <button
-            className={`px-8 py-4 rounded-t-lg transition-all duration-300 ease-in-out ${activeTab === 'tab2' ? 'bg-white dark:bg-gray-500' : 'hover:bg-gray-300 dark:hover:bg-gray-500'}`}
+            className={`px-8 py-4 rounded-t-lg transition-all duration-300 ease-in-out ${activeTab === 'tab2' ? 'border-b-2 border-gray-800 dark:border-white text-gray-800 dark:text-white' : 'text-gray-600 dark:text-gray-400'}`}
             onClick={() => handleTabClick('tab2')}
           >
             Two
           </button>
           <button
-            className={`px-8 py-4 rounded-t-lg transition-all duration-300 ease-in-out ${activeTab === 'tab3' ? 'bg-white dark:bg-gray-500' : 'hover:bg-gray-300 dark:hover:bg-gray-500'}`}
+            className={`px-8 py-4 rounded-t-lg transition-all duration-300 ease-in-out ${activeTab === 'tab3' ? 'border-b-2 border-gray-800 dark:border-white text-gray-800 dark:text-white' : 'text-gray-600 dark:text-gray-400'}`}
             onClick={() => handleTabClick('tab3')}
           >
             Three
           </button>
           <button
-            className={`px-8 py-4 rounded-t-lg transition-all duration-300 ease-in-out ${activeTab === 'tab4' ? 'bg-white dark:bg-gray-500' : 'hover:bg-gray-300 dark:hover:bg-gray-500'}`}
+            className={`px-8 py-4 rounded-t-lg transition-all duration-300 ease-in-out ${activeTab === 'tab4' ? 'border-b-2 border-gray-800 dark:border-white text-gray-800 dark:text-white' : 'text-gray-600 dark:text-gray-400'}`}
             onClick={() => handleTabClick('tab4')}
           >
             Four
           </button>
-          
         </div>
         <div className={`transition-all duration-500 ease-in-out transform ${activeTab === 'tab1' ? 'block' : 'hidden'}`}>
           <SystemSettingsTab />

@@ -7,9 +7,9 @@ import MainContent from './MainContent';
 const Dashboard: React.FC = () => {
   return (
     <div className="flex flex-col min-h-screen">
-      <Header />
+      {/* <Header /> */}
       <div className="flex flex-1">
-        <SideMenu />
+        {/* <SideMenu /> */}
         <MainContent />
       </div>
       <Footer />
