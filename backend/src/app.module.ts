@@ -1,14 +1,20 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { UsersModule } from './users/users.module';
+import { ConfigModule } from '@nestjs/config';
 import { DatabaseModule } from './database/database.module';
 import { ProjectsModule } from './projects/projects.module';
-import { IssuesModule } from './issues/issues.module';
+import { LabelsModule } from './labels/labels.module';
+// ... 다른 import 문
 
 @Module({
-  imports: [DatabaseModule, UsersModule, ProjectsModule,IssuesModule],
-  controllers: [AppController],
-  providers: [AppService],
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
+    DatabaseModule,
+    ProjectsModule,
+    LabelsModule,
+    // ... 다른 모듈들
+  ],
+  // ... 
 })
 export class AppModule {}

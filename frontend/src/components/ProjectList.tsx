@@ -20,9 +20,10 @@ export default function ProjectList() {
     const fetchProjects = async () => {
       try {
         const response = await axios.get('/projects');
-        setProjects(response.data);
+        setProjects(response.data || []); // 데이터가 없을 경우 빈 배열 사용
       } catch (error) {
         console.error('프로젝트 목록을 불러오는 데 실패했습니다:', error);
+        setProjects([]); // 오류 발생 시 빈 배열로 설정
       }
     };
 
