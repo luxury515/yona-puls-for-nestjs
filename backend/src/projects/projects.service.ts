@@ -105,4 +105,46 @@ export class ProjectsService {
       totalCount: count
     };
   }
+
+  async getProjectMembers(projectId: number) {
+    const [rows] = await this.connection.query(`
+      SELECT u.id, u.name, u.login_id
+      FROM project_user pu
+      JOIN n4user u ON pu.user_id = u.id
+      WHERE pu.project_id = ?
+    `, [projectId]);
+    return rows;
+  }
+
+  async searchUsers(query: string, projectId: number) {
+    const [rows] = await this.connection.query(`
+      SELECT DISTINCT id, name, login_id
+      FROM n4user
+      WHERE (name LIKE ? OR login_id LIKE ?)
+      AND id NOT IN (
+        SELECT user_id
+        FROM project_user
+        WHERE project_id = ?
+      )
+      LIMIT 10
+    `, [`%${query}%`, `%${query}%`, projectId]);
+    return rows;
+  }
+
+  async addProjectMember(projectId: number, userId: number) {
+    await this.connection.query(`
+      INSERT INTO project_user (project_id, user_id)
+      VALUES (?, ?)
+      ON DUPLICATE KEY UPDATE project_id = project_id
+    `, [projectId, userId]);
+    return { success: true };
+  }
+
+  async removeProjectMember(projectId: number, userId: number) {
+    await this.connection.query(`
+      DELETE FROM project_user
+      WHERE project_id = ? AND user_id = ?
+    `, [projectId, userId]);
+    return { success: true };
+  }
 }

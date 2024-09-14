@@ -164,7 +164,7 @@ export default function IssueForm() {
                   }),
                   option: (provided, state) => ({
                     ...provided,
-                    backgroundColor: state.isFocused ? 'var(--highlight-color)' : '#ffffff', // 배경색을 ���색으로 설정
+                    backgroundColor: state.isFocused ? 'var(--highlight-color)' : '#ffffff', // 배경색을 흰색으로 설정
                     color: 'var(--text-color)',
                   }),
                 }}

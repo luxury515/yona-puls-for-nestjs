@@ -1,7 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import Header from './Header';
-import SideMenu from './SideMenu';
 import HaveAnyData from './HaveAnyData';
 import Pagination from './Pagination';
 import IssueListTab from './IssueListTab';
@@ -22,7 +20,7 @@ export default function IssueList() {
   const [totalPages, setTotalPages] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [totalCount, setTotalCount] = useState(0);
-  const [activeTab, setActiveTab] = useState<'open' | 'closed'>('open');
+  const [activeTab, setActiveTab] = useState<'open' | 'closed' | 'assigned'>('open');
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
 
@@ -44,7 +42,7 @@ export default function IssueList() {
       }
     };
 
-    if (projectId) {
+    if (projectId && activeTab !== 'assigned') {
       fetchIssues();
     }
   }, [projectId, currentPage, pageSize, activeTab]);
@@ -70,45 +68,49 @@ export default function IssueList() {
       <div className="flex flex-1">
         <div className="flex-1 p-8">
           <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-white">이슈 목록 (프로젝트 ID: {projectId})</h2>
-          <IssueListTab activeTab={activeTab} setActiveTab={setActiveTab} />
-          {totalCount === 0 ? (
-            <HaveAnyData 
-              title="이슈가 없습니다"
-              description="새로운 이슈를 생성하여 프로젝트를 시작하세요."
-              buttonText="이슈 생성"
-              onButtonClick={handleCreateIssue}
-            />
-          ) : (
+          <IssueListTab activeTab={activeTab} setActiveTab={setActiveTab} projectId={projectId} />
+          {activeTab !== 'assigned' && (
             <>
-              <div className="mb-4 mt-4 flex justify-between items-center">
-                <p className="text-gray-600 dark:text-gray-300">총 {totalCount}개의 이슈</p>
-              </div>
-              <ul className="space-y-3">
-                {issues.map((issue) => (
-                  <button 
-                    key={issue.id} 
-                    className="w-full text-left flex justify-between gap-x-6 py-5 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 bg-white dark:bg-gray-800 rounded-lg shadow"
-                    onClick={() => handleIssueClick(issue.number)}
-                  >
-                    <div className="flex min-w-0 gap-x-4">
-                      <div className="min-w-0 flex-auto">
-                        <p className="text-sm font-semibold leading-6 text-gray-900 dark:text-white">{issue.title}</p>
-                      </div>
-                    </div>
-                    <div className="hidden shrink-0 sm:flex sm:flex-col sm:items-end">
-                      <p className="text-sm leading-6 text-gray-900 dark:text-white">{issue.status}</p>
-                      <p className="mt-1 text-xs leading-5 text-gray-500 dark:text-gray-400">
-                      작성자: {issue.author_name} | 생성일: <time dateTime={issue.created_date}>{new Date(issue.created_date).toLocaleDateString()}</time>
-                      </p>
-                    </div>
-                  </button>
-                ))}
-              </ul>
-              <Pagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={handlePageChange}
-              />
+              {totalCount === 0 ? (
+                <HaveAnyData 
+                  title="이슈가 없습니다"
+                  description="새로운 이슈를 생성하여 프로젝트를 시작하세요."
+                  buttonText="이슈 생성"
+                  onButtonClick={handleCreateIssue}
+                />
+              ) : (
+                <>
+                  <div className="mb-4 mt-4 flex justify-between items-center">
+                    <p className="text-gray-600 dark:text-gray-300">총 {totalCount}개의 이슈</p>
+                  </div>
+                  <ul className="space-y-3">
+                    {issues.map((issue) => (
+                      <button 
+                        key={issue.id} 
+                        className="w-full text-left flex justify-between gap-x-6 py-5 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 bg-white dark:bg-gray-800 rounded-lg shadow"
+                        onClick={() => handleIssueClick(issue.number)}
+                      >
+                        <div className="flex min-w-0 gap-x-4">
+                          <div className="min-w-0 flex-auto">
+                            <p className="text-sm font-semibold leading-6 text-gray-900 dark:text-white">{issue.title}</p>
+                          </div>
+                        </div>
+                        <div className="hidden shrink-0 sm:flex sm:flex-col sm:items-end">
+                          <p className="text-sm leading-6 text-gray-900 dark:text-white">{issue.status}</p>
+                          <p className="mt-1 text-xs leading-5 text-gray-500 dark:text-gray-400">
+                          작성자: {issue.author_name} | 생성일: <time dateTime={issue.created_date}>{new Date(issue.created_date).toLocaleDateString()}</time>
+                          </p>
+                        </div>
+                      </button>
+                    ))}
+                  </ul>
+                  <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={handlePageChange}
+                  />
+                </>
+              )}
             </>
           )}
         </div>
