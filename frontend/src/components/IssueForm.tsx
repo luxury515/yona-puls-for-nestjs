@@ -20,17 +20,25 @@ export default function IssueForm() {
   const [selectedParentIssue, setSelectedParentIssue] = useState(null);
 
   const fetchIssue = useCallback(async () => {
+    console.log('fetchIssue 함수 호출됨'); // 함수 호출 확인
     setIsLoading(true);
     try {
-      const response = await api.get(`/issues/${issueId}?projectId=${projectId}`);
+      const url = `/issues/${issueId}?projectId=${projectId}`;
+      console.log('요청 URL:', url); // 요청 URL 확인
+      const response = await api.get(url);
       const issue = response.data;
-      console.log(issue);
+      console.log('API 답:', issue); // API 응답 확인
       setTitle(issue.title);
       setContent(issue.body || '');
     } catch (error) {
-      console.error('이슈를 불러오는 데 실패했습니다:', error);
+      console.error('이슈를 불러오는 데 실패했습니다:', error as Error);
+      if ((error as any).response) {
+        console.error('응답 데이터:', (error as any).response.data);
+        console.error('응답 상태:', (error as any).response.status);
+      }
     } finally {
       setIsLoading(false);
+      console.log('fetchIssue 함수 종료'); // 함수 종료 확인
     }
   }, [issueId, projectId]);
 
@@ -47,7 +55,7 @@ export default function IssueForm() {
         setSelectedProject(selectedOption || null);
       }
     } catch (error) {
-      console.error('프로젝트 목록을 불러오는 데 실패했습니다:', error);
+      console.error('프로젝트 목록을 불러오는 데 실패했습니다:', error as Error);
     }
   }, [projectId]);
 
@@ -64,7 +72,7 @@ export default function IssueForm() {
       }));
       setIssues(issueOptions);
     } catch (error) {
-      console.error('프로젝트 이슈 목록을 불러오는 데 실패했습니다:', error);
+      console.error('프로젝트 이슈 목록을 불러오는 데 실패했습니다:', error as Error);
       setIssues([]);
     }
   }, []);
@@ -94,7 +102,7 @@ export default function IssueForm() {
       }
       navigate(`/projects/${projectId}/issues`);
     } catch (error) {
-      console.error('이슈 저장에 실패했습니다:', error);
+      console.error('이슈 저장에 실패했습니다:', error as Error);
     } finally {
       setIsLoading(false);
     }
@@ -125,7 +133,7 @@ export default function IssueForm() {
         {/* <SideMenu /> */}
         <main className="flex-1 p-6">
           <form onSubmit={handleSubmit} className="max-w-4xl mx-auto bg-white dark:bg-gray-800 shadow-md rounded-lg">
-            <h2 className="text-2xl font-bold mb-6 text-gray-800 dark:text-white">{issueId ? '이슈 수정' : '새 이슈 생성'}</h2>
+            <h2 className="text-2xl font-bold mb-6 text-gray-800 dark:text-white">{issueId ? '이슈 수정' : '새 이슈 성'}</h2>
             <div className="mb-4">
               <input 
                 type="text"
@@ -138,31 +146,32 @@ export default function IssueForm() {
             
             <div className="flex space-x-4 mb-4">
               <Select
-                className="w-[200px]"
+                className="w-[200px] relative"
                 options={projects}
                 value={selectedProject}
                 onChange={handleProjectChange}
                 placeholder="프로젝트 선택"
+                menuPortalTarget={document.body}
                 styles={{
                   control: (provided) => ({
                     ...provided,
-                    backgroundColor: 'var(--bg-color)',
+                    backgroundColor: '#ffffff', // 배경색을 흰색으로 설정
                     color: 'var(--text-color)',
                   }),
                   menu: (provided) => ({
                     ...provided,
-                    backgroundColor: 'var(--bg-color)',
+                    backgroundColor: '#ffffff', // 배경색을 흰색으로 설정
                   }),
                   option: (provided, state) => ({
                     ...provided,
-                    backgroundColor: state.isFocused ? 'var(--highlight-color)' : 'var(--bg-color)',
+                    backgroundColor: state.isFocused ? 'var(--highlight-color)' : '#ffffff', // 배경색을 ���색으로 설정
                     color: 'var(--text-color)',
                   }),
                 }}
               />
               
               <Select
-                className="w-[200px]"
+                className="w-[200px] relative"
                 options={issues}
                 value={selectedParentIssue}
                 onChange={(newValue) => setSelectedParentIssue(newValue)}
@@ -170,19 +179,20 @@ export default function IssueForm() {
                 isClearable
                 isDisabled={!selectedProject}
                 isSearchable
+                menuPortalTarget={document.body}
                 styles={{
                   control: (provided) => ({
                     ...provided,
-                    backgroundColor: 'var(--bg-color)',
+                    backgroundColor: '#ffffff', // 배경색을 흰색으로 설정
                     color: 'var(--text-color)',
                   }),
                   menu: (provided) => ({
                     ...provided,
-                    backgroundColor: 'var(--bg-color)',
+                    backgroundColor: '#ffffff', // 배경색을 흰색으로 설정
                   }),
                   option: (provided, state) => ({
                     ...provided,
-                    backgroundColor: state.isFocused ? 'var(--highlight-color)' : 'var(--bg-color)',
+                    backgroundColor: state.isFocused ? 'var(--highlight-color)' : '#ffffff', // 배경색을 흰색으로 설정
                     color: 'var(--text-color)',
                   }),
                 }}

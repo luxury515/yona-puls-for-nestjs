@@ -39,16 +39,17 @@ export class IssuesController {
 
     try {
       // 이슈 찾기
-      return await this.issuesService.findOne(issueIdNumber, projectIdNumber);
+      const issue = await this.issuesService.findOne(issueIdNumber, projectIdNumber);
+      if (!issue) {
+        throw new NotFoundException(`Issue with ID ${issueIdNumber} in project ${projectIdNumber} not found`);
+      }
+      return issue;
     } catch (error) {
       this.logger.error(`[IssuesController] Error finding issue: ${error.message}`);
       throw new NotFoundException(`Issue with ID ${issueIdNumber} in project ${projectIdNumber} not found`);
     }
   }
 
-  
-
-  
   @Patch(':id')
   async update(@Param('id') id: string, @Query('projectId') projectId: string, @Body() updateIssueDto: any) {
     return this.issuesService.update(+id, +projectId, updateIssueDto);

@@ -30,6 +30,7 @@ export class UsersController {
       throw new UnauthorizedException('로그인 보가 올바르지 않습니다.');
     }
     const result = await this.usersService.login(user);
+    console.log("result", result);
     return {
       ...result,
       message: '로그인에 성공했습니다.'
@@ -52,17 +53,17 @@ export class UsersController {
     }
   }
 
-  @UseGuards(AuthGuard('jwt'))
+  // @UseGuards(AuthGuard('jwt'))
   @Post('logout')
-  async logout(@Req() req: ExpressRequest) {
+  async logout(@Body() body: { user: { id: number } }) {
     try {
-      const user = req.user as { userId: string };
-      if (!user || !user.userId) {
+      const userId = body.user.id;
+      if (!userId) {
         this.logger.error('로그아웃 실패: 사용자 정보 없음');
         throw new UnauthorizedException('사용자 인증에 실패했습니다.');
       }
-      this.logger.log(`로그아웃 시도: 사용자 ID ${user.userId}`);
-      await this.usersService.logout(parseInt(user.userId, 10));
+      this.logger.log(`로그아웃 시도: 사용자 ID ${userId}`);
+      await this.usersService.logout(userId);
       return { message: '로그아웃 되었습니다.' };
     } catch (error) {
       this.logger.error(`로그아웃 실패: ${error.message}`, error.stack);

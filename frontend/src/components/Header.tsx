@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -6,13 +6,27 @@ import { FaSun, FaMoon, FaUser, FaCog, FaSignOutAlt } from 'react-icons/fa';
 
 export default function Header() {
   const { user, logout } = useAuth();
-  const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
+  const handleLogout = async () => {
+    await logout();
   };
+
+  const handleClickOutside = (event: MouseEvent) => {
+    const current = dropdownRef.current as HTMLElement | null;
+    if (current && !current.contains(event.target as Node)) {
+      setIsDropdownOpen(false);
+    }
+  };
+
+  useEffect(() => {
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   return (
     <header className="bg-white dark:bg-gray-800 shadow-md">
@@ -28,21 +42,23 @@ export default function Header() {
                 <Link to="/projectform" className="btn-primary">
                   프로젝트 생성
                 </Link>
-                <div className="relative group">
-                  <button className="btn-icon">
+                <div className="relative group" ref={dropdownRef}>
+                  <button onClick={() => setIsDropdownOpen(!isDropdownOpen)} className="btn-icon">
                     <FaUser />
                   </button>
-                  <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 z-10 hidden group-hover:block">
-                    <Link to="/profile" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
-                      <FaUser className="inline-block mr-2" /> 프로필
-                    </Link>
-                    <Link to="/settings" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
-                      <FaCog className="inline-block mr-2" /> 설정
-                    </Link>
-                    <button onClick={handleLogout} className="w-full text-left block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
-                      <FaSignOutAlt className="inline-block mr-2" /> 로그아웃
-                    </button>
-                  </div>
+                  {isDropdownOpen && (
+                    <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 z-10">
+                      <Link to="/profile" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                        <FaUser className="inline-block mr-2" /> 프로필
+                      </Link>
+                      <Link to="/settings" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                        <FaCog className="inline-block mr-2" /> 설정
+                      </Link>
+                      <button onClick={handleLogout} className="w-full text-left block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                        <FaSignOutAlt className="inline-block mr-2" /> 로그아웃
+                      </button>
+                    </div>
+                  )}
                 </div>
               </>
             ) : (

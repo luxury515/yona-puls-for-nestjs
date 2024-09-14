@@ -26,7 +26,11 @@ const Login: React.FC = () => {
     e.preventDefault();
     try {
       const response = await api.post('/users/login', formData);
+      console.log('로그인 응답:', response.data); // 응답 데이터 구조 확인
       if (response.data && response.data.user) {
+        const { accessToken, refreshToken } = response.data;
+        sessionStorage.setItem('accessToken', accessToken); // accessToken을 sessionStorage에 저장
+        localStorage.setItem('refreshToken', refreshToken); // refreshToken을 localStorage에 저장
         login(response.data.user);
         toast.success('로그인에 성공했습니다!');
         navigate('/');
@@ -34,9 +38,13 @@ const Login: React.FC = () => {
         console.error('로그인 응답에 사용자 정보가 없습니다.');
         toast.error('로그인 응답에 사용자 정보가 없습니다.');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('로그인 실패:', error);
-      toast.error('로그인에 실패했습니다. 다시 시도해주세요.');
+      if (error.response && error.response.data && error.response.data.message) {
+        toast.error(`로그인 실패: ${error.response.data.message}`);
+      } else {
+        toast.error('로그인에 실패했습니다. 다시 시도해주세요.');
+      }
     }
   };
 

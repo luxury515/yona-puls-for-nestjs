@@ -4,6 +4,7 @@ import { DatabaseModule } from './database/database.module';
 import { ProjectsModule } from './projects/projects.module';
 import { LabelsModule } from './labels/labels.module';
 import { UsersModule } from './users/users.module';
+import { IssuesModule } from './issues/issues.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { UsersModule } from './users/users.module';
     ProjectsModule,
     UsersModule,
     LabelsModule,
+    IssuesModule,
     // ... 다른 모듈들
   ],
   // ... 

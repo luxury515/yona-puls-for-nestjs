@@ -106,8 +106,8 @@ export class UsersService {
     await this.saveRefreshToken(user.id, refreshToken);
 
     return {
-      access_token: accessToken,
-      refresh_token: refreshToken,
+      accessToken: accessToken,
+      refreshToken: refreshToken,
       user: {
         id: user.id,
         name: user.name,

@@ -36,16 +36,32 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const logout = async () => {
     try {
-      let token = localStorage.getItem('accessToken');
+      let token = sessionStorage.getItem('accessToken');
+      console.log("token1", token);
+      const user = localStorage.getItem('user');
       if (!token) {
         token = await refreshToken();
+        console.log("token2", token);
       }
-      await axios.post('http://localhost:8080/users/logout', {}, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
+      console.log("user", user);
+      if (user) {
+        await axios.post('http://localhost:8080/users/logout', { user: JSON.parse(user) }, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+      }
       // 로그아웃 성공 처리
+      setUser(null); // 상태 초기화
+      setTimeout(() => {
+        sessionStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('user');
+        console.log("accessToken after remove:", sessionStorage.getItem('accessToken'));
+        console.log("refreshToken after remove:", localStorage.getItem('refreshToken'));
+        console.log("user after remove:", localStorage.getItem('user'));
+        window.location.href = '/login'; // 로그인 화면으로 이동
+      }, 100); // 100ms 지연
     } catch (error) {
       console.error('로그아웃 실패:', error);
     }
