@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { FaEllipsisV } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
-import Avatar, { AvatarGroup } from './Avatar';
+import { AvatarGroup } from './Avatar';
 import api from '../utils/api';
 interface Project {
   id: number;

@@ -109,7 +109,7 @@ const ProjectForm: React.FC = () => {
               onChange={handleChange}
               className="mr-2"
             />
-            공개
+            <span>공개</span>
           </label>
           <label className="inline-flex items-center">
             <input
@@ -120,7 +120,7 @@ const ProjectForm: React.FC = () => {
               onChange={handleChange}
               className="mr-2"
             />
-            비공개
+            <span>비공개</span>
           </label>
         </div>
       </div>

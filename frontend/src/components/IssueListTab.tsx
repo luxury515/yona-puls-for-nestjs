@@ -6,10 +6,13 @@ const classNames = (...classes: string[]) => {
   return classes.filter(Boolean).join(' ');
 };
 
+// 'TabType' 타입 별칭을 정의합니다.
+type TabType = 'open' | 'closed' | 'assigned';
+
 // 수정된 IssueListTabProps 인터페이스
 interface IssueListTabProps {
-  readonly activeTab: 'open' | 'closed' | 'assigned';
-  readonly setActiveTab: (tab: 'open' | 'closed' | 'assigned') => void;
+  readonly activeTab: TabType;
+  readonly setActiveTab: (tab: TabType) => void;
   readonly projectId: string;
 }
 

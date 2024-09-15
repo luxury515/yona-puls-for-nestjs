@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import Header from './Header';
-import SideMenu from './SideMenu';
-import axios, { AxiosError } from 'axios';  // AxiosError를 import 합니다.
+import axios from 'axios';  // AxiosError를 import 합니다.
 
 interface User {
   id: number;
@@ -49,9 +47,7 @@ const UserList: React.FC = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-white dark:bg-gray-900">
-      {/* <Header /> */}
       <div className="flex flex-1">
-        {/* <SideMenu /> */}
         <div className="flex-1 p-8">
           <h1 className="text-2xl font-bold mb-4 text-gray-800 dark:text-white">사용자 목록</h1>
           <div className="mb-4">

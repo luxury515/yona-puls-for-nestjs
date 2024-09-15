@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import api from '../utils/api';
 import debounce from 'lodash/debounce';
 
@@ -18,20 +18,21 @@ export default function ProjectMembers({ projectId }: Readonly<ProjectMembersPro
   const [searchResults, setSearchResults] = useState<Member[]>([]);
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
 
-  useEffect(() => {
-    fetchProjectMembers();
-  }, [projectId]);
-
-  const fetchProjectMembers = async () => {
+  const fetchProjectMembers = useCallback(async () => { // useCallback으로 변경
     try {
       const response = await api.get(`/projects/${projectId}/members`);
       setMembers(response.data);
     } catch (error) {
       console.error('프로젝트 멤버를 불러오는 데 실패했습니다:', error);
     }
-  };
+  }, [projectId]); // projectId 의존성 추가
+  
+  useEffect(() => {
+    fetchProjectMembers();
+  }, [fetchProjectMembers, projectId]); // fetchProjectMembers 의존성 제거
 
-  const debouncedSearch = useCallback(
+
+  const debouncedSearch = useMemo(() => 
     debounce(async (query: string) => {
       if (query.length > 1) {
         try {
@@ -44,8 +45,7 @@ export default function ProjectMembers({ projectId }: Readonly<ProjectMembersPro
         setSearchResults([]);
       }
     }, 300),
-    [projectId]
-  );
+  [projectId, setSearchResults]); // useMemo로 변경
 
   useEffect(() => {
     debouncedSearch(searchTerm);

@@ -45,7 +45,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
       console.log("user", user);
       if (user) {
-        await axios.post('http://localhost:8080/users/logout', { user: JSON.parse(user) }, {
+        await api.post('/users/logout', { user: JSON.parse(user) }, {
           headers: {
             Authorization: `Bearer ${token}`
           }

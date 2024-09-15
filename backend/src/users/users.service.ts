@@ -202,27 +202,7 @@ export class UsersService {
   }
 
   async adminResetPassword(userId: string): Promise<void> {
-    const findUserQuery = `
-      SELECT login_id, password_salt
-      FROM n4user
-      WHERE id = ?
-    `;
-    const [users] = await this.connection.execute<User[]>(findUserQuery, [userId]);
-
-    if (users.length === 0) {
-      throw new NotFoundException('사용자를 찾을 수 없습니다.');
-    }
-
-    const user = users[0];
-    const newPassword = user.login_id;
-    const hashedPassword = await this.hashPassword(newPassword, user.password_salt);
-
-    const updatePasswordQuery = `
-      UPDATE n4user
-      SET password = ?
-      WHERE id = ?
-    `;
-    await this.connection.execute(updatePasswordQuery, [hashedPassword, userId]);
+    await this.resetPassword(userId);
   }
 
   async sendPasswordResetEmail(email: string): Promise<void> {
