@@ -1,7 +1,6 @@
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
-import api from '../utils/api';
-import axios from 'axios'; // Assuming axios is used for HTTP requests
-
+import createApiClient from '../utils/api';
+const api = createApiClient();
 interface User {
   id: number;
   loginId: string;
@@ -70,7 +69,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const refreshToken = async () => {
     try {
       const refreshToken = localStorage.getItem('refreshToken');
-      const response = await axios.post('http://localhost:8080/users/refresh', { refresh_token: refreshToken });
+      const response = await api.post('/users/refresh', { refresh_token: refreshToken });
       localStorage.setItem('accessToken', response.data.access_token);
       return response.data.access_token;
     } catch (error) {

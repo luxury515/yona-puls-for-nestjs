@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { FaEllipsisV } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { AvatarGroup } from './Avatar';
-import api from '../utils/api';
+import createApiClient from '../utils/api';
+const api = createApiClient();
 interface Project {
   id: number;
   name: string;

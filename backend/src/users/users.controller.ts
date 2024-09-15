@@ -4,6 +4,13 @@ import { AuthGuard } from '@nestjs/passport';
 import { User } from './users.entity';
 import { AdminGuard } from '../guards/admin.guard';
 
+interface UserListResponse {
+  users: User[];
+  totalPages: number;
+  currentPage: number;
+  totalCount: number;
+}
+
 @Controller('users')
 export class UsersController {
   private readonly logger = new Logger(UsersController.name);
@@ -111,11 +118,11 @@ export class UsersController {
   }
 
   @Get('user-list')
-  // @UseGuards(AuthGuard('jwt'), AdminGuard)
-  async getUsers(@Query('state') state?: string): Promise<User[]> {
-    this.logger.log(`사용자 목록 요청 받음. 상태: ${state || '모든 상태'}`);
-    const users = await this.usersService.getUsers(state);
-    this.logger.log(`${users.length}명의 사용자를 찾았습니다.`);
-    return users;
+  async getUserList(
+    @Query('state') state: string,
+    @Query('page') page: number = 1,
+    @Query('pageSize') pageSize: number = 10
+  ): Promise<UserListResponse> {
+    return this.usersService.getUserList(state, page, pageSize);
   }
 }

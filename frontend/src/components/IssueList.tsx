@@ -3,7 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import HaveAnyData from './HaveAnyData';
 import Pagination from './Pagination';
 import IssueListTab from './IssueListTab';
-import api from '../utils/api';
+import createApiClient from '../utils/api';
+const api = createApiClient();
 
 interface Issue {
   id: number;

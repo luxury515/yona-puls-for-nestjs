@@ -1,6 +1,7 @@
 import React, { useState, ChangeEvent, FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../utils/api';
+import createApiClient from '../utils/api';
+const api = createApiClient();
 
 interface SignUpFormData {
   name: string;

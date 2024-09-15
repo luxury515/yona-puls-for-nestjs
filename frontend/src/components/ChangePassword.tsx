@@ -1,7 +1,8 @@
 import React, { useState, FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../utils/api';
 import { toast } from 'react-toastify';
+import createApiClient from '../utils/api';
+const api = createApiClient();
 
 const ChangePassword: React.FC = () => {
   const [oldPassword, setOldPassword] = useState('');

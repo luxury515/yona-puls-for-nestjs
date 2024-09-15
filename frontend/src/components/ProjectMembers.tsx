@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
-import api from '../utils/api';
 import debounce from 'lodash/debounce';
+import createApiClient from '../utils/api';
+const api = createApiClient();
 
 interface Member {
   id: number;
@@ -26,7 +27,7 @@ export default function ProjectMembers({ projectId }: Readonly<ProjectMembersPro
       console.error('프로젝트 멤버를 불러오는 데 실패했습니다:', error);
     }
   }, [projectId]); // projectId 의존성 추가
-  
+
   useEffect(() => {
     fetchProjectMembers();
   }, [fetchProjectMembers, projectId]); // fetchProjectMembers 의존성 제거

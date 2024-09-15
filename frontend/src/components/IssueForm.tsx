@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import api from '../utils/api';
 import Select from 'react-select';
+import createApiClient from '../utils/api';
+const api = createApiClient();
 // 프로젝트 옵션 타입 정의
 interface ProjectOption {
   value: string;

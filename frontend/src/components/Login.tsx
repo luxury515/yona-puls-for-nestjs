@@ -1,8 +1,9 @@
 import React, { useState, ChangeEvent, FormEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import api from '../utils/api';
 import { toast } from 'react-toastify';
+import createApiClient from '../utils/api';
+const api = createApiClient();
 
 interface LoginFormData {
   loginId: string;

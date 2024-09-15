@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../utils/api';
+import createApiClient from '../utils/api';
 import { toast } from 'react-toastify';
+const api = createApiClient();
 
 interface FormData {
   name: string;

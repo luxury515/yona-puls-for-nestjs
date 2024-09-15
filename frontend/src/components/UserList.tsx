@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';  // AxiosError를 import 합니다.
+import Pagination from './Pagination';
+import createApiClient from '../utils/api';
+const api = createApiClient();
 
 interface User {
   id: number;
@@ -9,38 +11,42 @@ interface User {
   state: string;
 }
 
+interface UserListResponse {
+  users: User[];
+  totalPages: number;
+  currentPage: number;
+  totalCount: number;
+}
+
 const UserList: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [activeTab, setActiveTab] = useState<string>('ACTIVE');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
 
   useEffect(() => {
-    fetchUsers(activeTab);
-  }, [activeTab]);
+    fetchUsers(activeTab, currentPage);
+  }, [activeTab, currentPage]);
 
-  const fetchUsers = async (state: string) => {
+  const fetchUsers = async (state: string, page: number) => {
     try {
-      const response = await axios.get(`/users/user-list?state=${state}`);
-      setUsers(response.data);
+      const response = await api.get<UserListResponse>(`/users/user-list?state=${state}&page=${page}&pageSize=10`);
+      if (response.data.users.length === 0) {
+        console.warn('사용자 목록이 비어 있습니다.');
+      }
+      setUsers(response.data.users);
+      setTotalPages(response.data.totalPages || 1);
+      setCurrentPage(response.data.currentPage);
+      setTotalCount(response.data.totalCount);
     } catch (error) {
       console.error('사용자 목록을 불러오는데 실패했습니다:', error);
-      if (axios.isAxiosError(error)) {  
-        if (error.response) {
-          // 서버 응답이 있는 경우
-          console.error('Error data:', error.response.data);
-          console.error('Error status:', error.response.status);
-          console.error('Error headers:', error.response.headers);
-        } else if (error.request) {
-          // 요청이 이루어졌으나 응답이 없는 경우
-          console.error('Error request:', error.request);
-        } else {
-          // 요청 설정 중 오류가 발생한 경우
-          console.error('Error message:', error.message);
-        }
-      } else {
-        // Axios 에러가 아닌 경우
-        console.error('Non-Axios error:', error);
-      }
+      // 에러 처리 로직...
     }
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
   };
 
   const tabs = ['ACTIVE', 'LOCKED', 'DELETED', 'GUEST', 'SITE_ADMIN'];
@@ -54,7 +60,10 @@ const UserList: React.FC = () => {
             {tabs.map((tab) => (
               <button
                 key={tab}
-                onClick={() => setActiveTab(tab)}
+                onClick={() => {
+                  setActiveTab(tab);
+                  setCurrentPage(1);
+                }}
                 className={`mr-2 px-3 py-1 rounded ${
                   activeTab === tab
                     ? 'bg-blue-500 text-white'
@@ -65,6 +74,7 @@ const UserList: React.FC = () => {
               </button>
             ))}
           </div>
+          <p className="mb-2 text-gray-600 dark:text-gray-400">총 {totalCount}명의 사용자</p>
           <table className="min-w-full bg-white dark:bg-gray-800">
             <thead>
               <tr className="bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 uppercase text-sm leading-normal">
@@ -85,6 +95,13 @@ const UserList: React.FC = () => {
               ))}
             </tbody>
           </table>
+          <div className="mt-4">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+            />
+          </div>
         </div>
       </div>
     </div>
