@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, Logger, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, Logger, BadRequestException, NotFoundException, Put, InternalServerErrorException } from '@nestjs/common';
 import { IssuesService } from './issues.service';
 
 @Controller('issues')
@@ -68,5 +68,23 @@ export class IssuesController {
   @Get(':id/children')
   async getChildIssues(@Param('id') id: string) {
     return this.issuesService.getChildIssues(+id);
+  }
+
+  @Put(':projectId/:issueId')
+  async updateIssue(
+    @Param('projectId') projectId: string,
+    @Param('issueId') issueId: string,
+    @Body() updateIssueDto: any
+  ) {
+    try {
+      const result = await this.issuesService.update(+projectId, +issueId, updateIssueDto);
+      return { message: 'Issue updated successfully', result };
+    } catch (error) {
+      this.logger.error(`Error updating issue: ${error.message}`, error.stack);
+      if (error instanceof NotFoundException) {
+        throw new NotFoundException(error.message);
+      }
+      throw new InternalServerErrorException('Failed to update issue');
+    }
   }
 }

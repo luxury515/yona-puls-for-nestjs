@@ -34,12 +34,54 @@ export class IssuesService {
     return rows[0];
   }
 
-  async update(id: number, projectId: number, updateIssueDto: any): Promise<any> {
-    const [result] = await this.connection.execute(
-      'UPDATE issue SET title = ?, body = ?, updated_date = NOW(), state = ? WHERE id = ? AND project_id = ?',
-      [updateIssueDto.title, updateIssueDto.body, updateIssueDto.state, id, projectId]
-    );
-    return result;
+  async update(projectId: number, issueId: number, updateIssueDto: any): Promise<any> {
+    const { title, body, ...otherFields } = updateIssueDto;
+    
+    const updateFields = [];
+    const updateValues = [];
+
+    if (title !== undefined) {
+      updateFields.push('title = ?');
+      updateValues.push(title);
+    }
+
+    if (body !== undefined) {
+      updateFields.push('body = ?');
+      updateValues.push(body);
+    }
+
+    // 다른 필드들에 대해서도 같은 방식으로 처리
+    for (const [key, value] of Object.entries(otherFields)) {
+      if (value !== undefined) {
+        updateFields.push(`${key} = ?`);
+        updateValues.push(value);
+      }
+    }
+
+    updateFields.push('updated_date = NOW()');
+
+    if (updateFields.length === 0) {
+      throw new Error('No fields to update');
+    }
+
+    const query = `
+      UPDATE issue
+      SET ${updateFields.join(', ')}
+      WHERE number = ? AND project_id = ?
+    `;
+
+    updateValues.push(issueId, projectId);
+
+    try {
+      const [result] = await this.connection.execute(query, updateValues);
+      if ((result as ResultSetHeader).affectedRows === 0) {
+        throw new NotFoundException(`Issue with ID ${issueId} in project ${projectId} not found`);
+      }
+      return result;
+    } catch (error) {
+      this.logger.error(`Error updating issue: ${error.message}`, error.stack);
+      throw new Error('Failed to update issue');
+    }
   }
 
   async remove(id: number, projectId: number): Promise<void> {

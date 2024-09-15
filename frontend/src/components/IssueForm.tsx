@@ -95,11 +95,15 @@ export default function IssueForm() {
     e.preventDefault();
     setIsLoading(true);
     try {
-      const contentString = content;
+      const updateData = {
+        title: title || undefined,
+        body: content || undefined,
+        // 다른 필드들도 필요에 따라 추가
+      };
       if (issueId) {
-        await api.put(`/issues/${issueId}/${projectId}`, { title, body: contentString });
+        await api.put(`/issues/${projectId}/${issueId}`, updateData);
       } else {
-        await api.post(`/issues/${projectId}`, { title, body: contentString });
+        await api.post(`/issues/${projectId}`, updateData);
       }
       navigate(`/projects/${projectId}/issues`);
     } catch (error) {
