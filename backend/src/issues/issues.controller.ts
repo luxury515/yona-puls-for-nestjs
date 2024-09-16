@@ -109,7 +109,7 @@ export class IssuesController {
   async addComment(
     @Param('projectId') projectId: string,
     @Param('issueNumber') issueNumber: string,
-    @Body() addCommentDto: { user_id: number, contents: string | null }
+    @Body() addCommentDto: { user_id: number, contents: string, parent_comment_id: number | null }
   ) {
     this.logger.log('==== addComment 함수 시작 ====');
     this.logger.log(`요청 받은 URL: /issues/${projectId}/${issueNumber}/comments`);
@@ -118,13 +118,15 @@ export class IssuesController {
     this.logger.log(`issueNumber: ${issueNumber}`);
     this.logger.log(`userId: ${addCommentDto.user_id}`);
     this.logger.log(`contents: ${addCommentDto.contents}`);
+    this.logger.log(`parent_comment_id: ${addCommentDto.parent_comment_id}`);
 
     try {
       const result = await this.issuesService.addComment(
         +projectId, 
         +issueNumber, 
         addCommentDto.user_id, 
-        addCommentDto.contents, 
+        addCommentDto.contents,
+        addCommentDto.parent_comment_id
       );
       this.logger.log('댓글 추가 결과:', JSON.stringify(result, null, 2));
       this.logger.log('==== addComment 함수 종료 ====');

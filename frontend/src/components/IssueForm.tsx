@@ -20,6 +20,7 @@ interface Comment {
   created_date: string;
   children: Comment[];
   author_id: number;
+  parent_comment_id: number | null;
 }  // auth 훅을 가져옴
 
 export default function IssueForm() {
@@ -33,7 +34,8 @@ export default function IssueForm() {
   const [issues, setIssues] = useState([]);
   const [selectedParentIssue, setSelectedParentIssue] = useState(null);
   const [comments, setComments] = useState<Comment[]>([]);
-  const [newComment, setNewComment] = useState('');
+  const [mainComment, setMainComment] = useState('');
+  const [replyComments, setReplyComments] = useState<{ [key: number]: string }>({});
   const [replyingTo, setReplyingTo] = useState<number | null>(null);
   const { user } = useAuth();  // 현재 로그인한 사용자 정보 가져오기
   const userId = user?.id;  // 사용자 ID 추출
@@ -166,20 +168,39 @@ export default function IssueForm() {
     }
   };
 
-  const handleAddComment = async (parentId: number | null = null) => {
-    alert('댓글 버튼클릭!');
+  const handleAddMainComment = async () => {
     try {
       console.log('Sending request to:', `/issues/${projectId}/${issueId}/comments`);
       const response = await api.post(`/issues/${projectId}/${issueId}/comments`, {
-        contents: newComment,
-        user_id: userId
+        contents: mainComment,
+        user_id: userId,
+        parent_comment_id: null
       });
       console.log('Response:', response.data);
-      setNewComment('');
-      setReplyingTo(null);
+      setMainComment('');
       fetchComments();
     } catch (error) {
       console.error('댓글 추가에 실패했습니다:', error);
+      if (axios.isAxiosError(error)) {
+        console.error('Error response:', error.response?.data);
+        console.error('Error status:', error.response?.status);
+      }
+    }
+  };
+
+  const handleAddReplyComment = async (parentId: number) => {
+    try {
+      const response = await api.post(`/issues/${projectId}/${issueId}/comments`, {
+        contents: replyComments[parentId],
+        user_id: userId,
+        parent_comment_id: parentId
+      });
+      console.log('Response:', response.data);
+      setReplyComments(prev => ({ ...prev, [parentId]: '' }));
+      setReplyingTo(null);
+      fetchComments();
+    } catch (error) {
+      console.error('답글 추가에 실패했습니다:', error);
       if (axios.isAxiosError(error)) {
         console.error('Error response:', error.response?.data);
         console.error('Error status:', error.response?.status);
@@ -285,13 +306,13 @@ export default function IssueForm() {
         {replyingTo === comment.id && (
           <div className="mt-2">
             <textarea
-              value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
+              value={replyComments[comment.id] || ''}
+              onChange={(e) => setReplyComments(prev => ({ ...prev, [comment.id]: e.target.value }))}
               className="w-full p-2 border rounded"
               placeholder="답글을 입력하세요"
             />
             <button
-              onClick={() => handleAddComment(comment.id)}
+              onClick={() => handleAddReplyComment(comment.id)}
               className="bg-blue-500 text-white px-4 py-2 rounded mt-2"
             >
               답글 작성
@@ -383,7 +404,7 @@ export default function IssueForm() {
                 className="w-full h-[60vh] p-2 text-sm font-semibold border border-gray-300 dark:border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
-                placeholder="내용을 입력하세요"
+                placeholder="내용�� 입력하세요"
             />
             <div className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400 mb-4">
               <div className="flex space-x-4">
@@ -406,12 +427,12 @@ export default function IssueForm() {
             {Array.isArray(comments) ? renderComments(comments) : <p>댓글을 불러오는 중...</p>}
             <div className="mt-4">
               <textarea
-                value={newComment}
-                onChange={(e) => setNewComment(e.target.value)}
+                value={mainComment}
+                onChange={(e) => setMainComment(e.target.value)}
                 placeholder="새 댓글 작성"
                 className="w-full p-2 border rounded"
               />
-              <button onClick={() => handleAddComment(null)} className="bg-blue-500 text-white px-4 py-2 rounded mt-2">댓글 작성</button>
+              <button onClick={handleAddMainComment} className="bg-blue-500 text-white px-4 py-2 rounded mt-2">댓글 작성</button>
             </div>
           </div>
         </main>

@@ -106,7 +106,30 @@ export class IssuesService {
 
     this.logger.log(`[IssuesService] Comments for issue ${issueId} in project ${projectId}: ${JSON.stringify(rows)}`);
 
-    return rows.map(row => new CommentDto(row));
+    return this.buildCommentTree(rows.map(row => new CommentDto(row)));
+  }
+
+  private buildCommentTree(comments: CommentDto[]): CommentDto[] {
+    const commentMap = new Map<number, CommentDto>();
+    const rootComments: CommentDto[] = [];
+
+    comments.forEach(comment => {
+      commentMap.set(comment.id, comment);
+      comment.children = [];  // children 배열 초기화
+    });
+
+    comments.forEach(comment => {
+      if (comment.parent_comment_id === null) {
+        rootComments.push(comment);
+      } else {
+        const parentComment = commentMap.get(comment.parent_comment_id);
+        if (parentComment && parentComment.children) {
+          parentComment.children.push(comment);
+        }
+      }
+    });
+
+    return rootComments;
   }
 
   async getChildIssues(parentId: number): Promise<any[]> {
@@ -114,12 +137,13 @@ export class IssuesService {
     return rows as any[];
   }
 
-  async addComment(projectId: number, issueNumber: number, userId: number, contents: string | null): Promise<ResultSetHeader> {
+  async addComment(projectId: number, issueNumber: number, userId: number, contents: string, parentCommentId: number | null): Promise<ResultSetHeader> {
     console.log('addComment 함수 호출됨');
     console.log('projectId:', projectId);
     console.log('issueNumber:', issueNumber);
     console.log('userId:', userId);
     console.log('contents:', contents);
+    console.log('parentCommentId:', parentCommentId);
     
     const [issueRows] = await this.connection.execute<RowDataPacket[]>(
       'SELECT id FROM issue WHERE project_id = ? AND number = ?',
@@ -132,8 +156,8 @@ export class IssuesService {
 
     const issueId = issueRows[0].id;
 
-    let query = 'INSERT INTO issue_comment (issue_id, author_id, contents, project_id, created_date) VALUES (?, ?, ?, ?, NOW())';
-    let params = [issueId, userId, contents, projectId];
+    let query = 'INSERT INTO issue_comment (issue_id, author_id, contents, project_id, parent_comment_id, created_date) VALUES (?, ?, ?, ?, ?, NOW())';
+    let params = [issueId, userId, contents, projectId, parentCommentId];
 
     const [result] = await this.connection.execute<ResultSetHeader>(query, params);
 

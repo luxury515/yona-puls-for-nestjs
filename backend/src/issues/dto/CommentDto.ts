@@ -8,6 +8,7 @@ export class CommentDto {
     issue_id: number;
     project_id: number;
     parent_comment_id: number | null;
+    children?: CommentDto[];  // 추가된 부분
   
     constructor(row: any) {
       this.id = row.id;
@@ -19,5 +20,6 @@ export class CommentDto {
       this.issue_id = row.issue_id;
       this.project_id = row.project_id;
       this.parent_comment_id = row.parent_comment_id;
+      this.children = [];  // 초기화
     }
-  }
+}
