@@ -23,6 +23,11 @@ interface Comment {
   parent_comment_id: number | null;
 }  // auth 훅을 가져옴
 
+interface ParentIssueOption {
+  value: string;
+  label: string;
+}
+
 export default function IssueForm() {
   const { projectId, issueId } = useParams();
   const navigate = useNavigate();
@@ -31,8 +36,8 @@ export default function IssueForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [projects, setProjects] = useState<ProjectOption[]>([]);
   const [selectedProject, setSelectedProject] = useState<ProjectOption | null>(null);
-  const [issues, setIssues] = useState([]);
-  const [selectedParentIssue, setSelectedParentIssue] = useState(null);
+  const [issues, setIssues] = useState<ParentIssueOption[]>([]);
+  const [selectedParentIssue, setSelectedParentIssue] = useState<ParentIssueOption | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [mainComment, setMainComment] = useState('');
   const [replyComments, setReplyComments] = useState<{ [key: number]: string }>({});
@@ -56,6 +61,16 @@ export default function IssueForm() {
       console.log('API 답:', issue); // API 응답 확인
       setTitle(issue.title);
       setContent(issue.body || '');
+      
+      setSelectedProject({ value: issue.project_id.toString(), label: `(#${issue.project_id}):${issue.project_name}` });
+      if (issue.parent_id) {
+        setSelectedParentIssue({
+          value: issue.parent_id.toString(),
+          label: `#${issue.parent_number} ${issue.parent_title}`
+        });
+      } else {
+        setSelectedParentIssue({ value: 'none', label: '부모 이슈 없음' });
+      }
     } catch (error) {
       console.error('이슈를 불러오는 데 실패했습니다:', error as Error);
       if ((error as any).response) {
@@ -93,15 +108,22 @@ export default function IssueForm() {
       });
       const issuesData = Array.isArray(response.data) ? response.data : response.data.issues || [];
       const issueOptions = issuesData.map((issue: { id: any; number: any; title: any; }) => ({
-        value: issue.id,
+        value: issue.id.toString(),
         label: `#${issue.number} ${issue.title}`
       }));
       setIssues(issueOptions);
+      if (issueId) {
+        const currentIssue = issuesData.find((issue: { id: any; }) => issue.id.toString() === issueId);
+        setSelectedParentIssue(currentIssue ? 
+          { value: currentIssue.id.toString(), label: `#${currentIssue.number} ${currentIssue.title}` } 
+          : { value: 'none', label: '부모 이슈 없음' }
+        );
+      }
     } catch (error) {
       console.error('프로젝트 이슈 목록을 불러오는 데 실패했습니다:', error as Error);
       setIssues([]);
     }
-  }, []);
+  }, [issueId]);
 
   const fetchComments = useCallback(async () => {
     if (!issueId || !projectId) return;
@@ -123,8 +145,12 @@ export default function IssueForm() {
       fetchIssue();
       fetchComments();
     }
-    fetchSelectboxProjects();
-  }, [issueId, projectId, fetchIssue, fetchSelectboxProjects, fetchComments]);
+    fetchSelectboxProjects().then(() => {
+      if (projectId) {
+        fetchSelectboxIssues(projectId);
+      }
+    });
+  }, [issueId, projectId, fetchIssue, fetchSelectboxProjects, fetchComments, fetchSelectboxIssues]);
 
   useEffect(() => {
     if (selectedProject) {
@@ -366,7 +392,7 @@ export default function IssueForm() {
                   }),
                   option: (provided, state) => ({
                     ...provided,
-                    backgroundColor: state.isFocused ? 'var(--highlight-color)' : '#ffffff', // 배경색을 흰색으로 설
+                    backgroundColor: state.isFocused ? 'var(--highlight-color)' : '#ffffff', // 배경색을 흰색으로 설정
                     color: 'var(--text-color)',
                   }),
                 }}
@@ -376,7 +402,7 @@ export default function IssueForm() {
                 className="w-[200px] relative"
                 options={issues}
                 value={selectedParentIssue}
-                onChange={(newValue) => setSelectedParentIssue(newValue)}
+                onChange={(newValue: ParentIssueOption | null) => setSelectedParentIssue(newValue)}
                 placeholder="— 부모 이슈 선택 —"
                 isClearable
                 isDisabled={!selectedProject}
@@ -404,7 +430,7 @@ export default function IssueForm() {
                 className="w-full h-[60vh] p-2 text-sm font-semibold border border-gray-300 dark:border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
-                placeholder="내용�� 입력하세요"
+                placeholder="내용 입력하세요"
             />
             <div className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400 mb-4">
               <div className="flex space-x-4">
