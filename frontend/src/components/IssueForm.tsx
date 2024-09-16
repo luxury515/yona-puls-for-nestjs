@@ -3,10 +3,19 @@ import { useParams, useNavigate } from 'react-router-dom';
 import Select from 'react-select';
 import createApiClient from '../utils/api';
 const api = createApiClient();
+
 // 프로젝트 옵션 타입 정의
 interface ProjectOption {
   value: string;
   label: string;
+}
+
+interface Comment {
+  id: number;
+  contents: string;
+  author_name: string;
+  created_date: string;
+  children: Comment[];
 }
 
 export default function IssueForm() {
@@ -19,6 +28,9 @@ export default function IssueForm() {
   const [selectedProject, setSelectedProject] = useState<ProjectOption | null>(null);
   const [issues, setIssues] = useState([]);
   const [selectedParentIssue, setSelectedParentIssue] = useState(null);
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [newComment, setNewComment] = useState('');
+  const [replyingTo, setReplyingTo] = useState<number | null>(null);
 
   const fetchIssue = useCallback(async () => {
     console.log('fetchIssue 함수 호출됨'); // 함수 호출 확인
@@ -78,12 +90,28 @@ export default function IssueForm() {
     }
   }, []);
 
+  const fetchComments = useCallback(async () => {
+    if (!issueId || !projectId) return;
+    try {
+      const response = await api.get(`/issues/${issueId}/comments`, {
+        params: { projectId }
+      });
+      console.log('전체 댓글 데이터:', response.data);  // 전체 응답 데이터 로그 출력
+      console.log('첫 번째 댓글:', response.data[0]);  // 첫 번째 댓글 객체 전체 로그 출력
+      setComments(response.data);
+    } catch (error) {
+      console.error('댓글을 불러오는데 실패했습니다:', error);
+      setComments([]);  // 오류 발생 시 빈 배열로 설정
+    }
+  }, [issueId, projectId]);
+
   useEffect(() => {
-    if (issueId) {
+    if (issueId && projectId) {
       fetchIssue();
+      fetchComments();
     }
     fetchSelectboxProjects();
-  }, [issueId, projectId, fetchIssue, fetchSelectboxProjects]);
+  }, [issueId, projectId, fetchIssue, fetchSelectboxProjects, fetchComments]);
 
   useEffect(() => {
     if (selectedProject) {
@@ -125,6 +153,50 @@ export default function IssueForm() {
     } else {
       setIssues([]);
     }
+  };
+
+  const handleAddComment = async (parentId: number | null = null) => {
+    try {
+      await api.post(`/issues/${issueId}/comments`, {
+        content: newComment,
+        parentId
+      });
+      setNewComment('');
+      setReplyingTo(null);
+      fetchComments();
+    } catch (error) {
+      console.error('댓글 추가에 실패했습니다:', error);
+    }
+  };
+
+  const renderComments = (comments: Comment[] = [], depth = 0) => {
+    if (!Array.isArray(comments)) {
+      console.error('댓글이 배열이 아닙니다:', comments);
+      return null;
+    }
+
+    return comments.map(comment => (
+      <div key={comment.id} style={{ marginLeft: `${depth * 20}px`, marginBottom: '10px' }}>
+        <div className="bg-gray-100 p-3 rounded">
+          <p className="font-bold">{comment.author_name}</p>
+          <p className="mt-1">{comment.contents}</p>  {/* content 표시 */}
+          <p className="text-sm text-gray-500 mt-1">{new Date(comment.created_date).toLocaleString()}</p>
+          <button onClick={() => setReplyingTo(comment.id)} className="text-blue-500 mt-2">답글</button>
+        </div>
+        {replyingTo === comment.id && (
+          <div className="mt-2">
+            <textarea
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              className="w-full p-2 border rounded"
+              placeholder="답글을 입력하세요"
+            />
+            <button onClick={() => handleAddComment(comment.id)} className="bg-blue-500 text-white px-4 py-2 rounded mt-2">답글 작성</button>
+          </div>
+        )}
+        {comment.children && renderComments(comment.children, depth + 1)}
+      </div>
+    ));
   };
 
   if (isLoading) {
@@ -225,6 +297,19 @@ export default function IssueForm() {
               </button>
             </div>
           </form>
+          <div className="mt-8">
+            <h3 className="text-xl font-bold mb-4">댓글</h3>
+            {Array.isArray(comments) ? renderComments(comments) : <p>댓글을 불러오는 중...</p>}
+            <div className="mt-4">
+              <textarea
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                placeholder="새 댓글 작성"
+                className="w-full p-2 border rounded"
+              />
+              <button onClick={() => handleAddComment(null)} className="bg-blue-500 text-white px-4 py-2 rounded mt-2">댓글 작성</button>
+            </div>
+          </div>
         </main>
       </div>
     </div>

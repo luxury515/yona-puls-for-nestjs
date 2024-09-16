@@ -1,5 +1,6 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, Query, Logger, BadRequestException, NotFoundException, Put, InternalServerErrorException } from '@nestjs/common';
 import { IssuesService } from './issues.service';
+import { CommentDto } from './dto/CommentDto';
 
 @Controller('issues')
 export class IssuesController {
@@ -61,8 +62,24 @@ export class IssuesController {
   }
 
   @Get(':id/comments')
-  async getComments(@Param('id') id: string) {
-    return this.issuesService.getComments(+id);
+  async getComments(
+    @Param('id') id: string, // 이슈 번호 (issue_id 아닌 number 컬럼이다.)
+    @Query('projectId') projectId: string // 프로젝트 번호 (project_id)
+  ): Promise<CommentDto[]> {
+    this.logger.log(`[IssuesController] Received request for comments of issue ${id} in project ${projectId}`); // 디버깅 로그 추가
+    
+    // projectId 검증
+    if (!projectId) {
+      throw new BadRequestException('Project ID is required');
+    }
+
+    try {
+      const comments = await this.issuesService.getComments(+id, +projectId);
+      return comments;
+    } catch (error) {
+      this.logger.error(`[IssuesController] Error fetching comments for issue ${id} in project ${projectId}: ${error.message}`, error.stack); // 디버깅 로그 추가
+      throw new InternalServerErrorException('Failed to fetch comments');
+    }
   }
 
   @Get(':id/children')
