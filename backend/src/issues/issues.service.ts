@@ -109,26 +109,6 @@ export class IssuesService {
     return rows.map(row => new CommentDto(row));
   }
 
-  private buildCommentTree(comments: any[]): any[] {
-    const commentMap = new Map();
-    const rootComments = [];
-
-    comments.forEach(comment => {
-      comment.children = [];
-      commentMap.set(comment.id, comment);
-      if (comment.parent_id === null) {
-        rootComments.push(comment);
-      } else {
-        const parentComment = commentMap.get(comment.parent_id);
-        if (parentComment) {
-          parentComment.children.push(comment);
-        }
-      }
-    });
-
-    return rootComments;
-  }
-
   async getChildIssues(parentId: number): Promise<any[]> {
     const [rows] = await this.connection.execute('SELECT * FROM issue WHERE parent_id = ?', [parentId]);
     return rows as any[];
