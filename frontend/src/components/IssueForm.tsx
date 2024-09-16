@@ -2,6 +2,9 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Select from 'react-select';
 import createApiClient from '../utils/api';
+import axios from 'axios';
+import { useAuth } from '../context/AuthContext';
+
 const api = createApiClient();
 
 // 프로젝트 옵션 타입 정의
@@ -16,7 +19,8 @@ interface Comment {
   author_name: string;
   created_date: string;
   children: Comment[];
-}
+  author_id: number;
+}  // auth 훅을 가져옴
 
 export default function IssueForm() {
   const { projectId, issueId } = useParams();
@@ -31,6 +35,13 @@ export default function IssueForm() {
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
   const [replyingTo, setReplyingTo] = useState<number | null>(null);
+  const { user } = useAuth();  // 현재 로그인한 사용자 정보 가져오기
+  const userId = user?.id;  // 사용자 ID 추출
+  console.log('userId:', userId);
+
+  const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
+  const [editedContent, setEditedContent] = useState('');
+  const [isContentChanged, setIsContentChanged] = useState(false);
 
   const fetchIssue = useCallback(async () => {
     console.log('fetchIssue 함수 호출됨'); // 함수 호출 확인
@@ -97,7 +108,7 @@ export default function IssueForm() {
         params: { projectId }
       });
       console.log('전체 댓글 데이터:', response.data);  // 전체 응답 데이터 로그 출력
-      console.log('첫 번째 댓글:', response.data[0]);  // 첫 번째 댓글 객체 전체 로그 출력
+      console.log('첫 번째 댓글:', response.data[0]);  // 첫 번째 댓글 객체 체 로그 출력
       setComments(response.data);
     } catch (error) {
       console.error('댓글을 불러오는데 실패했습니다:', error);
@@ -156,16 +167,49 @@ export default function IssueForm() {
   };
 
   const handleAddComment = async (parentId: number | null = null) => {
+    alert('댓글 버튼클릭!');
     try {
-      await api.post(`/issues/${issueId}/comments`, {
-        content: newComment,
-        parentId
+      console.log('Sending request to:', `/issues/${projectId}/${issueId}/comments`);
+      const response = await api.post(`/issues/${projectId}/${issueId}/comments`, {
+        contents: newComment,
+        user_id: userId
       });
+      console.log('Response:', response.data);
       setNewComment('');
       setReplyingTo(null);
       fetchComments();
     } catch (error) {
       console.error('댓글 추가에 실패했습니다:', error);
+      if (axios.isAxiosError(error)) {
+        console.error('Error response:', error.response?.data);
+        console.error('Error status:', error.response?.status);
+      }
+    }
+  };
+
+  const handleEditComment = async (commentId: number, updatedContent: string) => {
+    try {
+      await api.put(`/issues/${projectId}/${issueId}/comments/${commentId}`, {
+        contents: updatedContent,
+        user_id: userId
+      });
+      fetchComments();
+      setEditingCommentId(null);
+      setEditedContent('');
+      setIsContentChanged(false);
+    } catch (error) {
+      console.error('댓글 수정에 실패했습니다:', error);
+    }
+  };
+
+  const handleDeleteComment = async (commentId: number) => {
+    if (window.confirm('정말로 이 댓글을 삭제하시겠습니까?')) {
+      try {
+        await api.delete(`/issues/${projectId}/${issueId}/comments/${commentId}?user_id=${userId}`);
+        fetchComments();
+      } catch (error) {
+        console.error('댓글 삭제에 실패했습니다:', error);
+      }
     }
   };
 
@@ -179,9 +223,64 @@ export default function IssueForm() {
       <div key={comment.id} style={{ marginLeft: `${depth * 20}px`, marginBottom: '10px' }}>
         <div className="bg-gray-100 p-3 rounded">
           <p className="font-bold">{comment.author_name}</p>
-          <p className="mt-1">{comment.contents}</p>  {/* content 표시 */}
+          {editingCommentId === comment.id ? (
+            <textarea
+              value={editedContent}
+              onChange={(e) => {
+                setEditedContent(e.target.value);
+                setIsContentChanged(e.target.value !== comment.contents);
+              }}
+              className="w-full p-2 border rounded mt-2"
+            />
+          ) : (
+            <p className="mt-1">{comment.contents}</p>
+          )}
           <p className="text-sm text-gray-500 mt-1">{new Date(comment.created_date).toLocaleString()}</p>
-          <button onClick={() => setReplyingTo(comment.id)} className="text-blue-500 mt-2">답글</button>
+          {comment.author_id === userId && (
+            <div className="mt-2">
+              {editingCommentId === comment.id ? (
+                <>
+                  <button
+                    onClick={() => handleEditComment(comment.id, editedContent)}
+                    className={`px-2 py-1 rounded ${
+                      isContentChanged ? 'bg-blue-500 text-white' : 'bg-gray-300 text-gray-600'
+                    }`}
+                    disabled={!isContentChanged}
+                  >
+                    저장
+                  </button>
+                  <button
+                    onClick={() => {
+                      setEditingCommentId(null);
+                      setEditedContent('');
+                      setIsContentChanged(false);
+                    }}
+                    className="px-2 py-1 ml-2 bg-gray-300 text-gray-600 rounded"
+                  >
+                    취소
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={() => {
+                      setEditingCommentId(comment.id);
+                      setEditedContent(comment.contents);
+                    }}
+                    className="text-blue-500 mr-2"
+                  >
+                    수정
+                  </button>
+                  <button onClick={() => handleDeleteComment(comment.id)} className="text-red-500">
+                    삭제
+                  </button>
+                </>
+              )}
+            </div>
+          )}
+          <button onClick={() => setReplyingTo(comment.id)} className="text-blue-500 mt-2">
+            답글
+          </button>
         </div>
         {replyingTo === comment.id && (
           <div className="mt-2">
@@ -191,7 +290,12 @@ export default function IssueForm() {
               className="w-full p-2 border rounded"
               placeholder="답글을 입력하세요"
             />
-            <button onClick={() => handleAddComment(comment.id)} className="bg-blue-500 text-white px-4 py-2 rounded mt-2">답글 작성</button>
+            <button
+              onClick={() => handleAddComment(comment.id)}
+              className="bg-blue-500 text-white px-4 py-2 rounded mt-2"
+            >
+              답글 작성
+            </button>
           </div>
         )}
         {comment.children && renderComments(comment.children, depth + 1)}
@@ -241,7 +345,7 @@ export default function IssueForm() {
                   }),
                   option: (provided, state) => ({
                     ...provided,
-                    backgroundColor: state.isFocused ? 'var(--highlight-color)' : '#ffffff', // 배경색을 흰색으로 설정
+                    backgroundColor: state.isFocused ? 'var(--highlight-color)' : '#ffffff', // 배경색을 흰색으로 설
                     color: 'var(--text-color)',
                   }),
                 }}

@@ -114,11 +114,60 @@ export class IssuesService {
     return rows as any[];
   }
 
-  async addComment(issueId: number, userId: number, content: string, parentId: number | null): Promise<any> {
-    const [result] = await this.connection.execute(`
-      INSERT INTO issue_comment (issue_id, author_id, content, parent_id, created_date)
-      VALUES (?, ?, ?, ?, NOW())
-    `, [issueId, userId, content, parentId]);
+  async addComment(projectId: number, issueNumber: number, userId: number, contents: string | null): Promise<ResultSetHeader> {
+    console.log('addComment 함수 호출됨');
+    console.log('projectId:', projectId);
+    console.log('issueNumber:', issueNumber);
+    console.log('userId:', userId);
+    console.log('contents:', contents);
+    
+    const [issueRows] = await this.connection.execute<RowDataPacket[]>(
+      'SELECT id FROM issue WHERE project_id = ? AND number = ?',
+      [projectId, issueNumber]
+    );
+
+    if (issueRows.length === 0) {
+      throw new NotFoundException(`Issue with number ${issueNumber} in project ${projectId} not found`);
+    }
+
+    const issueId = issueRows[0].id;
+
+    let query = 'INSERT INTO issue_comment (issue_id, author_id, contents, project_id, created_date) VALUES (?, ?, ?, ?, NOW())';
+    let params = [issueId, userId, contents, projectId];
+
+    const [result] = await this.connection.execute<ResultSetHeader>(query, params);
+
     return result;
+  }
+
+  async updateComment(projectId: number, issueNumber: number, commentId: number, userId: number, contents: string): Promise<ResultSetHeader> {
+    const [commentRows] = await this.connection.execute<RowDataPacket[]>(
+      'SELECT * FROM issue_comment WHERE id = ? AND author_id = ?',
+      [commentId, userId]
+    );
+
+    if (commentRows.length === 0) {
+      throw new NotFoundException('Comment not found or user is not the author');
+    }
+
+    const [result] = await this.connection.execute<ResultSetHeader>(
+      'UPDATE issue_comment SET contents = ? WHERE id = ?',
+      [contents, commentId]
+    );
+
+    return result;
+  }
+
+  async deleteComment(projectId: number, issueNumber: number, commentId: number, userId: number): Promise<void> {
+    const [commentRows] = await this.connection.execute<RowDataPacket[]>(
+      'SELECT * FROM issue_comment WHERE id = ? AND author_id = ?',
+      [commentId, userId]
+    );
+
+    if (commentRows.length === 0) {
+      throw new NotFoundException('Comment not found or user is not the author');
+    }
+
+    await this.connection.execute('DELETE FROM issue_comment WHERE id = ?', [commentId]);
   }
 }
