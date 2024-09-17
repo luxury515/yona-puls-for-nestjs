@@ -7,7 +7,6 @@ import { useAuth } from '../context/AuthContext';
 
 const api = createApiClient();
 
-// 프로젝트 옵션 타입 정의
 interface ProjectOption {
   value: string;
   label: string;
@@ -21,7 +20,7 @@ interface Comment {
   children: Comment[];
   author_id: number;
   parent_comment_id: number | null;
-}  // auth 훅을 가져옴
+}
 
 interface ParentIssueOption {
   value: string;
@@ -42,27 +41,22 @@ export default function IssueForm() {
   const [mainComment, setMainComment] = useState('');
   const [replyComments, setReplyComments] = useState<{ [key: number]: string }>({});
   const [replyingTo, setReplyingTo] = useState<number | null>(null);
-  const { user } = useAuth();  // 현재 로그인한 사용자 정보 가져오기
-  const userId = user?.id;  // 사용자 ID 추출
-  console.log('userId:', userId);
-
+  const { user } = useAuth();
+  const userId = user?.id;
   const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
   const [editedContent, setEditedContent] = useState('');
   const [isContentChanged, setIsContentChanged] = useState(false);
 
   const fetchIssue = useCallback(async () => {
-    console.log('fetchIssue 함수 호출됨'); // 함수 호출 확인
     setIsLoading(true);
     try {
       const url = `/issues/${issueId}?projectId=${projectId}`;
-      console.log('요청 URL:', url); // 요청 URL 확인
       const response = await api.get(url);
       const issue = response.data;
-      console.log('API 답:', issue); // API 응답 확인
+      console.log('issue',issue);
       setTitle(issue.title);
       setContent(issue.body || '');
-      
-      setSelectedProject({ value: issue.project_id.toString(), label: `(#${issue.project_id}):${issue.project_name}` });
+      setSelectedProject({ value: issue.project_id.toString(), label: `(#${issue.project_id}):${issue.project_name || '프로젝트 이름 없음'}` });
       if (issue.parent_id) {
         setSelectedParentIssue({
           value: issue.parent_id.toString(),
@@ -73,13 +67,8 @@ export default function IssueForm() {
       }
     } catch (error) {
       console.error('이슈를 불러오는 데 실패했습니다:', error as Error);
-      if ((error as any).response) {
-        console.error('응답 데이터:', (error as any).response.data);
-        console.error('응답 상태:', (error as any).response.status);
-      }
     } finally {
       setIsLoading(false);
-      console.log('fetchIssue 함수 종료'); // 함수 종료 확인
     }
   }, [issueId, projectId]);
 
@@ -131,26 +120,23 @@ export default function IssueForm() {
       const response = await api.get(`/issues/${issueId}/comments`, {
         params: { projectId }
       });
-      console.log('전체 댓글 데이터:', response.data);  // 전체 응답 데이터 로그 출력
-      console.log('첫 번째 댓글:', response.data[0]);  // 첫 번째 댓글 객체 체 로그 출력
       setComments(response.data);
     } catch (error) {
       console.error('댓글을 불러오는데 실패했습니다:', error);
-      setComments([]);  // 오류 발생 시 빈 배열로 설정
+      setComments([]);
     }
   }, [issueId, projectId]);
 
   useEffect(() => {
-    if (issueId && projectId) {
-      fetchIssue();
-      fetchComments();
+    if (projectId) {
+      fetchSelectboxProjects().then(() => {
+        if (issueId) {
+          fetchIssue();
+          fetchComments();
+        }
+      });
     }
-    fetchSelectboxProjects().then(() => {
-      if (projectId) {
-        fetchSelectboxIssues(projectId);
-      }
-    });
-  }, [issueId, projectId, fetchIssue, fetchSelectboxProjects, fetchComments, fetchSelectboxIssues]);
+  }, [projectId, issueId, fetchIssue, fetchSelectboxProjects, fetchComments]);
 
   useEffect(() => {
     if (selectedProject) {
@@ -165,7 +151,6 @@ export default function IssueForm() {
       const updateData = {
         title: title || undefined,
         body: content || undefined,
-        // 다른 필드들도 필요에 따라 추가
       };
       if (issueId) {
         await api.put(`/issues/${projectId}/${issueId}`, updateData);
@@ -196,13 +181,11 @@ export default function IssueForm() {
 
   const handleAddMainComment = async () => {
     try {
-      console.log('Sending request to:', `/issues/${projectId}/${issueId}/comments`);
       const response = await api.post(`/issues/${projectId}/${issueId}/comments`, {
         contents: mainComment,
         user_id: userId,
         parent_comment_id: null
       });
-      console.log('Response:', response.data);
       setMainComment('');
       fetchComments();
     } catch (error) {
@@ -221,7 +204,6 @@ export default function IssueForm() {
         user_id: userId,
         parent_comment_id: parentId
       });
-      console.log('Response:', response.data);
       setReplyComments(prev => ({ ...prev, [parentId]: '' }));
       setReplyingTo(null);
       fetchComments();
@@ -356,9 +338,7 @@ export default function IssueForm() {
 
   return (
     <div className="flex flex-col min-h-screen bg-white dark:bg-gray-900">
-      {/* <Header /> */}
       <div className="flex flex-1">
-        {/* <SideMenu /> */}
         <main className="flex-1 p-6">
           <form onSubmit={handleSubmit} className="max-w-4xl mx-auto bg-white dark:bg-gray-800 shadow-md rounded-lg">
             <h2 className="text-2xl font-bold mb-6 text-gray-800 dark:text-white">{issueId ? '이슈 수정' : '새 이슈 성'}</h2>

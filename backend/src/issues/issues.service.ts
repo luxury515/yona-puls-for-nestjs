@@ -22,16 +22,16 @@ export class IssuesService {
   }
 
   async findOne(issueId: number, projectId: number): Promise<RowDataPacket> {
-    // this.logger.log(`[IssuesService] Searching for issue ${issueId} in project ${projectId}`);
     const [rows] = await this.connection.execute<RowDataPacket[]>(
-      'SELECT * FROM issue WHERE number = ? AND project_id = ?',
+      `SELECT i.*, p.name as project_name
+       FROM issue i
+       JOIN project p ON i.project_id = p.id
+       WHERE i.number = ? AND i.project_id = ?`,
       [issueId, projectId]
     );
     if (rows.length === 0) {
-      // this.logger.warn(`[IssuesService] Issue with ID ${issueId} in project ${projectId} not found`);
       throw new NotFoundException(`Issue with ID ${issueId} in project ${projectId} not found`);
     }
-    // this.logger.log(`[IssuesService] Issue found: ${JSON.stringify(rows[0])}`);
     return rows[0];
   }
 
