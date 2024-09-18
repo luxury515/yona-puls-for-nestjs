@@ -194,4 +194,33 @@ export class IssuesService {
 
     await this.connection.execute('DELETE FROM issue_comment WHERE id = ?', [commentId]);
   }
+
+  async getIssueLabels(issueNumber: number, projectId: number): Promise<RowDataPacket[]> {
+    this.logger.log(`Fetching labels for issueNumber: ${issueNumber}, projectId: ${projectId}`);
+    
+    const sql = `
+      SELECT 
+        il.name AS label_name,
+        ilc.name AS category_name,
+        il.color AS label_color
+      FROM 
+        issue i
+      JOIN 
+        issue_issue_label iil ON i.id = iil.issue_id
+      JOIN 
+        issue_label il ON iil.issue_label_id = il.id
+      LEFT JOIN 
+        issue_label_category ilc ON il.category_id = ilc.id
+      WHERE 
+        i.project_id = ?
+        AND i.number = ?
+      ORDER BY 
+        ilc.name, il.name;
+    `;
+    
+    const [rows] = await this.connection.execute<RowDataPacket[]>(sql, [projectId, issueNumber]);
+    this.logger.log(`Labels fetched: ${JSON.stringify(rows)}`);
+    
+    return rows;
+  }
 }

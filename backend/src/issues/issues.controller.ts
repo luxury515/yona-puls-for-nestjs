@@ -178,4 +178,15 @@ export class IssuesController {
       throw new InternalServerErrorException('Failed to delete comment');
     }
   }
+
+  @Get(':issueNumber/labels')
+  async getIssueLabels(
+    @Param('issueNumber') issueNumber: string,
+    @Query('projectId') projectId: string
+  ) {
+    console.log(`issueNumber: ${issueNumber}`);
+    console.log(`projectId: ${projectId}`);
+    // 라벨을 가져오는 로직 구현
+    return this.issuesService.getIssueLabels(+issueNumber, +projectId);
+  }
 }
