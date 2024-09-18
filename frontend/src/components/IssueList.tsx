@@ -9,8 +9,8 @@ const api = createApiClient();
 
 interface Label {
   id: number;
-  name: string;
-  color: string;
+  label_name: string;
+  label_color: string;
 }
 
 interface Issue {
@@ -133,7 +133,7 @@ export default function IssueList() {
                         <div className="mt-2">
                           {issue.labels && issue.labels.length > 0 ? (
                             issue.labels.map((label) => (
-                              <IssueLabel key={label.id} name={label.name} color={label.color} />
+                              <IssueLabel key={label.id} name={label.label_name} color={label.label_color} />
                             ))
                           ) : (
                             <span className="text-gray-500 text-sm">라벨 없음</span>
