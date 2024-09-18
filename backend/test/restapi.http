@@ -79,3 +79,20 @@ Content-Type: application/json
   "token": "77f7990881948efdc83fcce4aefb7f48b5f17f66b53de4e0bd67ffed3798122a",
   "newPassword": "11111"
 }
+
+### 이슈 라벨 조회 테스트
+GET http://localhost:8080/projects/33/labels/issues/1313
+Authorization: Bearer {{accessToken}}
+
+### 이슈에 라벨 추가 테스트
+POST http://localhost:8080/projects/33/labels/issues/1313
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "labelId": 1
+}
+
+### 이슈에서 라벨 제거 테스트
+DELETE http://localhost:8080/projects/33/labels/issues/1313/1
+Authorization: Bearer {{accessToken}}

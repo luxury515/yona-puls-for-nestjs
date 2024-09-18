@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException, Inject } from '@nestjs/common';
-import { Pool } from 'mysql2/promise';
+import { Pool, RowDataPacket } from 'mysql2/promise';
 
 @Injectable()
 export class LabelsService {
@@ -72,5 +72,65 @@ export class LabelsService {
     if ((result as any).affectedRows === 0) {
       throw new NotFoundException(`프로젝트 ID ${projectId}의 라벨 ID ${id}를 찾을 수 없습니다.`);
     }
+  }
+
+  async getIssueLabels(projectId: number, issueNumber: number) {
+    const [rows] = await this.connection.query<RowDataPacket[]>(`
+      SELECT 
+        il.id AS label_id,
+        il.name AS label_name,
+        ilc.name AS category_name,
+        il.color AS label_color
+      FROM 
+        issue i
+      JOIN 
+        issue_issue_label iil ON i.id = iil.issue_id
+      JOIN 
+        issue_label il ON iil.issue_label_id = il.id
+      LEFT JOIN 
+        issue_label_category ilc ON il.category_id = ilc.id
+      WHERE 
+        i.project_id = ? AND i.number = ?
+      ORDER BY 
+        ilc.name, il.name
+    `, [projectId, issueNumber]);
+    console.log('Query result:', rows); 
+    return rows;
+  }
+
+  async addIssueLabel(projectId: number, issueNumber: number, labelId: number) {
+    const [issue] = await this.connection.query<RowDataPacket[]>(
+      'SELECT id FROM issue WHERE project_id = ? AND number = ?',
+      [projectId, issueNumber]
+    );
+
+    if (!issue[0]) {
+      throw new NotFoundException('Issue not found');
+    }
+
+    await this.connection.query(
+      'INSERT IGNORE INTO issue_issue_label (issue_id, issue_label_id) VALUES (?, ?)',
+      [issue[0].id, labelId]
+    );
+
+    return { success: true };
+  }
+
+  async removeIssueLabel(projectId: number, issueNumber: number, labelId: number) {
+    const [issue] = await this.connection.query<RowDataPacket[]>(
+      'SELECT id FROM issue WHERE project_id = ? AND number = ?',
+      [projectId, issueNumber]
+    );
+
+    if (!issue[0]) {
+      throw new NotFoundException('Issue not found');
+    }
+
+    await this.connection.query(
+      'DELETE FROM issue_issue_label WHERE issue_id = ? AND issue_label_id = ?',
+      [issue[0].id, labelId]
+    );
+
+    return { success: true };
   }
 }

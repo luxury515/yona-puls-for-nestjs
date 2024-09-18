@@ -1,4 +1,4 @@
-import { Controller, Post, Delete, Body, Param, Put } from '@nestjs/common';
+import { Controller, Post, Delete, Body, Param, Put, Get } from '@nestjs/common';
 import { LabelsService } from './labels.service';
 
 @Controller('projects/:projectId/labels')
@@ -50,5 +50,31 @@ export class LabelsController {
   ) {
     await this.labelsService.deleteLabel(projectId, id);
     return { message: '라벨이 성공적으로 삭제되었습니다.' };
+  }
+
+  @Get('issues/:issueNumber')
+  async getIssueLabels(
+    @Param('projectId') projectId: number,
+    @Param('issueNumber') issueNumber: number
+  ) {
+    return this.labelsService.getIssueLabels(projectId, issueNumber);
+  }
+
+  @Post('issues/:issueNumber')
+  async addIssueLabel(
+    @Param('projectId') projectId: number,
+    @Param('issueNumber') issueNumber: number,
+    @Body('labelId') labelId: number
+  ) {
+    return this.labelsService.addIssueLabel(projectId, issueNumber, labelId);
+  }
+
+  @Delete('issues/:issueNumber/:labelId')
+  async removeIssueLabel(
+    @Param('projectId') projectId: number,
+    @Param('issueNumber') issueNumber: number,
+    @Param('labelId') labelId: number
+  ) {
+    return this.labelsService.removeIssueLabel(projectId, issueNumber, labelId);
   }
 }
