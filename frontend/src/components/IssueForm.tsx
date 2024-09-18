@@ -2,8 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Select from 'react-select';
 import createApiClient from '../utils/api';
-import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import { toast } from 'react-toastify';
 
 const api = createApiClient();
 
@@ -53,7 +53,6 @@ export default function IssueForm() {
       const url = `/issues/${issueId}?projectId=${projectId}`;
       const response = await api.get(url);
       const issue = response.data;
-      console.log('issue',issue);
       setTitle(issue.title);
       setContent(issue.body || '');
       setSelectedProject({ value: issue.project_id.toString(), label: `(#${issue.project_id}):${issue.project_name || '프로젝트 이름 없음'}` });
@@ -154,12 +153,15 @@ export default function IssueForm() {
       };
       if (issueId) {
         await api.put(`/issues/${projectId}/${issueId}`, updateData);
+        toast.success('이슈가 성공적으로 수정되었습니다.'); // 3초 동안 표시
       } else {
         await api.post(`/issues/${projectId}`, updateData);
+        toast.success('새 이슈가 성공적으로 생성되었습니다.'); // 3초 동안 표시
       }
       navigate(`/projects/${projectId}/issues`);
     } catch (error) {
       console.error('이슈 저장에 실패했습니다:', error as Error);
+      toast.error('이슈 저장에 실패했습니다. 다시 시도해주세요.'); // 5초 동안 표시
     } finally {
       setIsLoading(false);
     }
@@ -181,25 +183,23 @@ export default function IssueForm() {
 
   const handleAddMainComment = async () => {
     try {
-      const response = await api.post(`/issues/${projectId}/${issueId}/comments`, {
+      await api.post(`/issues/${projectId}/${issueId}/comments`, {
         contents: mainComment,
         user_id: userId,
         parent_comment_id: null
       });
       setMainComment('');
       fetchComments();
+      toast.success('댓글이 성공적으로 추가되었습니다.'); // 2초 동안 표시
     } catch (error) {
       console.error('댓글 추가에 실패했습니다:', error);
-      if (axios.isAxiosError(error)) {
-        console.error('Error response:', error.response?.data);
-        console.error('Error status:', error.response?.status);
-      }
+      toast.error('댓글 추가에 실패했습니다. 다시 시도해주세요.'); // 4초 동안 표시
     }
   };
 
   const handleAddReplyComment = async (parentId: number) => {
     try {
-      const response = await api.post(`/issues/${projectId}/${issueId}/comments`, {
+      await api.post(`/issues/${projectId}/${issueId}/comments`, {
         contents: replyComments[parentId],
         user_id: userId,
         parent_comment_id: parentId
@@ -209,10 +209,7 @@ export default function IssueForm() {
       fetchComments();
     } catch (error) {
       console.error('답글 추가에 실패했습니다:', error);
-      if (axios.isAxiosError(error)) {
-        console.error('Error response:', error.response?.data);
-        console.error('Error status:', error.response?.status);
-      }
+      toast.error('답글 추가에 실패했습니다. 다시 시도해주세요.'); // 4초 동안 표시
     }
   };
 
@@ -341,7 +338,7 @@ export default function IssueForm() {
       <div className="flex flex-1">
         <main className="flex-1 p-6">
           <form onSubmit={handleSubmit} className="max-w-4xl mx-auto bg-white dark:bg-gray-800 shadow-md rounded-lg">
-            <h2 className="text-2xl font-bold mb-6 text-gray-800 dark:text-white">{issueId ? '이슈 수정' : '새 이슈 성'}</h2>
+            <h2 className="text-2xl font-bold mb-6 text-gray-800 dark:text-white">{issueId ? '이슈 수정' : '새 이슈 생성'}</h2>
             <div className="mb-4">
               <input 
                 type="text"

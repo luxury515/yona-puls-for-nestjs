@@ -14,6 +14,22 @@ const createApiClient = (): AxiosInstance => {
     return config;
   });
 
+  api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+      // 공통 에러 처리
+      if (error.response) {
+        console.error('API 응답 에러:', error.response.data);
+        console.error('API 응답 상태:', error.response.status);
+      } else if (error.request) {
+        console.error('API 요청 에러:', error.request);
+      } else {
+        console.error('API 설정 에러:', error.message);
+      }
+      return Promise.reject(error);
+    }
+  );
+
   return api;
 };
 

@@ -37,7 +37,17 @@ function App() {
     <ThemeProvider>
       <AuthProvider>
         <Router>
-          <ToastContainer />
+          <ToastContainer
+            position="top-right"
+            autoClose={1000} // 기본 지속 시간을 3초로 설정
+            hideProgressBar={false}
+            newestOnTop={false}
+            closeOnClick
+            rtl={false}
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover
+          />
           <Routes>
             <Route path="/" element={<PageLayout><Home /></PageLayout>} />
             <Route path="/login" element={<Login />} />
