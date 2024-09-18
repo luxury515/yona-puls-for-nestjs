@@ -225,7 +225,7 @@ export default function IssueForm() {
       }
       navigate(`/projects/${projectId}/issues`);
     } catch (error) {
-      console.error('이슈 저장에 실패했습니다:', error as Error);
+      console.error('이슈 저에 실패했습니다:', error as Error);
       toast.error('이슈 저장에 실패했습니다. 다시 시도해주세요.'); // 5초 동안 표시
     } finally {
       setIsLoading(false);
@@ -311,7 +311,7 @@ export default function IssueForm() {
     }
 
     return comments.map(comment => (
-      <div key={comment.id} style={{ marginLeft: `${depth * 20}px`, marginBottom: '10px' }}>
+      <div key={`comment-${comment.id}-${depth}`} style={{ marginLeft: `${depth * 20}px`, marginBottom: '10px' }}>
         <div className="bg-gray-100 p-3 rounded">
           <p className="font-bold">{comment.author_name}</p>
           {editingCommentId === comment.id ? (
@@ -392,15 +392,6 @@ export default function IssueForm() {
         {comment.children && renderComments(comment.children, depth + 1)}
       </div>
     ));
-  };
-
-  const handleAddLabelClick = () => {
-    const selectedLabel = searchedLabels.find(label => label.label_name === newLabelName);
-    if (selectedLabel) {
-      handleAddLabel(selectedLabel.id);
-      setNewLabelName('');
-      setSearchedLabels([]);
-    }
   };
 
   if (isLoading) {
@@ -495,7 +486,7 @@ export default function IssueForm() {
               <h3 className="text-lg font-semibold mb-2">라벨</h3>
               <div className="flex flex-wrap gap-2 mb-2">
                 {labels.map(label => (
-                  <div key={label.id} className="flex items-center">
+                  <div key={`label-${label.id || label.label_name}`} className="flex items-center">
                     <IssueLabel name={label.label_name} color={label.label_color} />
                     <button
                       type="button"
@@ -529,21 +520,21 @@ export default function IssueForm() {
                   placeholder="새 라벨 추가 또는 검색"
                   className="flex-grow p-2 border rounded"
                 />
-                <button
-                  type="button"
-                  onClick={handleAddLabelClick}
-                  className="ml-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-                >
-                  추가
-                </button>
               </div>
               {searchedLabels.length > 0 && (
                 <ul className="mt-2 border rounded">
                   {searchedLabels.map(label => (
                     <li
-                      key={label.id}
+                      key={`search-label-${label.id || label.label_name}`}
                       onClick={() => handleLabelSelect(label)}
                       className="p-2 hover:bg-gray-100 cursor-pointer"
+                      role="button"
+                      tabIndex={0}
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          handleLabelSelect(label);
+                        }
+                      }}
                     >
                       <IssueLabel name={label.label_name} color={label.label_color} />
                     </li>
