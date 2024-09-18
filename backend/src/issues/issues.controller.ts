@@ -189,4 +189,34 @@ export class IssuesController {
     // 라벨을 가져오는 로직 구현
     return this.issuesService.getIssueLabels(+issueNumber, +projectId);
   }
+
+  @Post(':issueNumber/labels')
+  async addLabelToIssue(
+    @Param('issueNumber') issueNumber: string,
+    @Query('labelId') labelId: string,
+    @Query('projectId') projectId: string
+  ) {
+    console.log(`Adding label ${labelId} to issue ${issueNumber} in project ${projectId}`);
+    const label = await this.issuesService.addLabelToIssue(+issueNumber, +projectId, +labelId);
+    return label; // 라벨 정보를 반환
+  }
+
+  @Delete(':issueNumber/labels/:labelId')
+  async removeLabelFromIssue(
+    @Param('issueNumber') issueNumber: string,
+    @Param('labelId') labelId: string,
+    @Query('projectId') projectId: string
+  ) {
+    console.log(`Removing label ${labelId} from issue ${issueNumber} in project ${projectId}`);
+    return this.issuesService.removeLabelFromIssue(+issueNumber, +labelId, +projectId);
+  }
+
+  @Get('projects/:projectId/labels')
+  async searchLabels(
+    @Param('projectId') projectId: string,
+    @Query('search') search: string
+  ) {
+    console.log(`Searching labels in project ${projectId} with query: ${search}`);
+    return this.issuesService.searchLabels(+projectId, search);
+  }
 }

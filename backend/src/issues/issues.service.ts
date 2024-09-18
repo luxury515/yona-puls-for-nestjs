@@ -223,4 +223,86 @@ export class IssuesService {
     
     return rows;
   }
+
+  async addLabelToIssue(issueNumber: number, projectId: number, labelId: number): Promise<RowDataPacket> {
+    this.logger.log(`Adding label ${labelId} to issue ${issueNumber} in project ${projectId}`);
+    
+    // 1. 이슈 ID 가져오기
+    const [issueRows] = await this.connection.execute<RowDataPacket[]>(
+      'SELECT id FROM issue WHERE number = ? AND project_id = ?',
+      [issueNumber, projectId]
+    );
+    
+    if (issueRows.length === 0) {
+      throw new NotFoundException(`Issue with number ${issueNumber} in project ${projectId} not found`);
+    }
+    
+    const issueId = issueRows[0].id;
+    
+    // 2. 라벨이 존재하는지 확인
+    const [labelRows] = await this.connection.execute<RowDataPacket[]>(
+      'SELECT * FROM issue_label WHERE id = ? AND project_id = ?',
+      [labelId, projectId]
+    );
+    
+    if (labelRows.length === 0) {
+      throw new NotFoundException(`Label with ID ${labelId} in project ${projectId} not found`);
+    }
+    
+    // 3. 이슈와 라벨 연결
+    await this.connection.execute(
+      'INSERT IGNORE INTO issue_issue_label (issue_id, issue_label_id) VALUES (?, ?)',
+      [issueId, labelId]
+    );
+    
+    return labelRows[0];
+  }
+
+  async removeLabelFromIssue(issueNumber: number, labelId: number, projectId: number): Promise<void> {
+    this.logger.log(`Removing label ${labelId} from issue ${issueNumber} in project ${projectId}`);
+    
+    // 1. 이슈 ID 가져오기
+    const [issueRows] = await this.connection.execute<RowDataPacket[]>(
+      'SELECT id FROM issue WHERE number = ? AND project_id = ?',
+      [issueNumber, projectId]
+    );
+    
+    if (issueRows.length === 0) {
+      throw new NotFoundException(`Issue with number ${issueNumber} in project ${projectId} not found`);
+    }
+    
+    const issueId = issueRows[0].id;
+    
+    // 2. 이슈와 라벨의 연결 제거
+    await this.connection.execute(
+      'DELETE FROM issue_issue_label WHERE issue_id = ? AND issue_label_id = ?',
+      [issueId, labelId]
+    );
+  }
+
+  async searchLabels(projectId: number, search: string): Promise<RowDataPacket[]> {
+    this.logger.log(`Searching labels in project ${projectId} with query: ${search}`);
+    
+    const sql = `
+      SELECT 
+        il.id,
+        il.name AS label_name,
+        il.color AS label_color,
+        ilc.name AS category_name
+      FROM 
+        issue_label il
+      LEFT JOIN 
+        issue_label_category ilc ON il.category_id = ilc.id
+      WHERE 
+        il.project_id = ?
+        AND il.name LIKE ?
+      ORDER BY 
+        ilc.name, il.name;
+    `;
+    
+    const [rows] = await this.connection.execute<RowDataPacket[]>(sql, [projectId, `%${search}%`]);
+    this.logger.log(`Labels found: ${JSON.stringify(rows)}`);
+    
+    return rows;
+  }
 }

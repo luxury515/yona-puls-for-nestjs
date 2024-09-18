@@ -4,6 +4,7 @@ import Select from 'react-select';
 import createApiClient from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
+import IssueLabel from './IssueLabel';
 
 const api = createApiClient();
 
@@ -27,6 +28,12 @@ interface ParentIssueOption {
   label: string;
 }
 
+interface Label {
+  id: number;
+  label_name: string;
+  label_color: string;
+}
+
 export default function IssueForm() {
   const { projectId, issueId } = useParams();
   const navigate = useNavigate();
@@ -46,6 +53,9 @@ export default function IssueForm() {
   const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
   const [editedContent, setEditedContent] = useState('');
   const [isContentChanged, setIsContentChanged] = useState(false);
+  const [labels, setLabels] = useState<Label[]>([]);
+  const [newLabelName, setNewLabelName] = useState('');
+  const [searchedLabels, setSearchedLabels] = useState<Label[]>([]);
 
   const fetchIssue = useCallback(async () => {
     setIsLoading(true);
@@ -142,6 +152,61 @@ export default function IssueForm() {
       fetchSelectboxIssues(selectedProject.value);
     }
   }, [selectedProject, fetchSelectboxIssues]);
+
+  useEffect(() => {
+    if (issueId && projectId) {
+      fetchIssueLabels();
+    }
+  }, [issueId, projectId]);
+
+  const fetchIssueLabels = async () => {
+    try {
+      const response = await api.get(`/issues/${issueId}/labels`, { params: { projectId } });
+      setLabels(response.data);
+    } catch (error) {
+      console.error('라벨을 불러오는데 실패했습니다:', error);
+    }
+  };
+
+  const handleAddLabel = async (labelId: number) => {
+    try {
+      const response = await api.post(`/issues/${issueId}/labels`, null, { params: { projectId, labelId } });
+      const newLabel = response.data;
+      setLabels((prevLabels) => [...prevLabels, newLabel]); // 반환된 라벨 정보를 사용하여 상태 업데이트
+    } catch (error) {
+      console.error('라벨 추가에 실패했습니다:', error);
+    }
+  };
+
+  const handleRemoveLabel = async (labelId: number) => {
+    try {
+      await api.delete(`/issues/${issueId}/labels/${labelId}`, { params: { projectId } });
+      setLabels(labels.filter(label => label.id !== labelId));
+    } catch (error) {
+      console.error('라벨 삭제에 실패했습니다:', error);
+    }
+  };
+
+  const handleLabelSearch = async (searchTerm: string) => {
+    if (!searchTerm.trim()) {
+      setSearchedLabels([]);
+      return;
+    }
+    try {
+      const response = await api.get(`/issues/projects/${projectId}/labels`, { params: { search: searchTerm } });
+      setSearchedLabels(response.data);
+    } catch (error) {
+      console.error('라벨 검색에 실패했습니다:', error);
+    }
+  };
+
+  const handleLabelSelect = (label: Label) => {
+    if (!labels.some(l => l.id === label.id)) {
+      handleAddLabel(label.id);
+    }
+    setSearchedLabels([]);
+    setNewLabelName('');
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -329,6 +394,15 @@ export default function IssueForm() {
     ));
   };
 
+  const handleAddLabelClick = () => {
+    const selectedLabel = searchedLabels.find(label => label.label_name === newLabelName);
+    if (selectedLabel) {
+      handleAddLabel(selectedLabel.id);
+      setNewLabelName('');
+      setSearchedLabels([]);
+    }
+  };
+
   if (isLoading) {
     return <div className="flex justify-center items-center h-screen">로딩 중...</div>;
   }
@@ -415,6 +489,67 @@ export default function IssueForm() {
                 <button type="button" className="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300">파일 올리기</button>
               </div>
               <span>바로를 클릭해서 선택하세요</span>
+            </div>
+            
+            <div className="mb-4">
+              <h3 className="text-lg font-semibold mb-2">라벨</h3>
+              <div className="flex flex-wrap gap-2 mb-2">
+                {labels.map(label => (
+                  <div key={label.id} className="flex items-center">
+                    <IssueLabel name={label.label_name} color={label.label_color} />
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveLabel(label.id)}
+                      className="ml-1 text-red-500 hover:text-red-700"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <div className="flex items-center">
+                <input
+                  type="text"
+                  value={newLabelName}
+                  onChange={(e) => {
+                    setNewLabelName(e.target.value);
+                    handleLabelSearch(e.target.value);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Tab' && newLabelName.trim()) {
+                      e.preventDefault();
+                      const label = searchedLabels.find(l => l.label_name === newLabelName);
+                      if (label) {
+                        handleAddLabel(label.id);
+                        setNewLabelName('');
+                        setSearchedLabels([]);
+                      }
+                    }
+                  }}
+                  placeholder="새 라벨 추가 또는 검색"
+                  className="flex-grow p-2 border rounded"
+                />
+                <button
+                  type="button"
+                  onClick={handleAddLabelClick}
+                  className="ml-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                >
+                  추가
+                </button>
+              </div>
+              {searchedLabels.length > 0 && (
+                <ul className="mt-2 border rounded">
+                  {searchedLabels.map(label => (
+                    <li
+                      key={label.id}
+                      onClick={() => handleLabelSelect(label)}
+                      className="p-2 hover:bg-gray-100 cursor-pointer"
+                    >
+                      <IssueLabel name={label.label_name} color={label.label_color} />
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
             
             <div className="flex justify-end space-x-2">
